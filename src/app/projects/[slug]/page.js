@@ -77,6 +77,185 @@ export default function ProjectPage() {
     }
   };
 
+  // Get time complexity for project
+  const getTimeComplexity = (projectId) => {
+    const complexities = {
+      calculator: "O(1)",
+      "odd-even": "O(1)",
+      "prime-number": "O(√n)",
+      "bubble-sort": "O(n²)",
+      "binary-search": "O(log n)",
+      fibonacci: "O(n)",
+      "linear-search": "O(n)",
+      "selection-sort": "O(n²)",
+      "palindrome-checker": "O(n)",
+      "factorial-calculator": "O(n)",
+      "password-generator": "O(n)",
+      "gcd-calculator": "O(log n)",
+      "number-guessing": "O(1)",
+      "rock-paper-scissors": "O(1)",
+      "mad-libs": "O(n)",
+    };
+    return complexities[projectId] || "O(n)";
+  };
+
+  // Get time complexity description
+  const getTimeComplexityDesc = (projectId) => {
+    const descriptions = {
+      calculator: "Constant time - operations are independent of input size",
+      "odd-even": "Constant time - single modulo operation",
+      "prime-number": "Square root time - checks divisors up to √n",
+      "bubble-sort": "Quadratic time - nested loops for comparisons",
+      "binary-search": "Logarithmic time - divides search space in half",
+      fibonacci: "Linear time - iterative approach",
+      "linear-search": "Linear time - may need to check every element",
+      "selection-sort": "Quadratic time - nested loops for finding minimum",
+      "palindrome-checker": "Linear time - checks each character once",
+      "factorial-calculator": "Linear time - multiplies from 1 to n",
+      "password-generator": "Linear time - generates n characters",
+      "gcd-calculator": "Logarithmic time - Euclidean algorithm efficiency",
+      "number-guessing": "Constant time - simple comparison operations",
+      "rock-paper-scissors": "Constant time - simple game logic",
+      "mad-libs": "Linear time - processes string length",
+    };
+    return descriptions[projectId] || "Time depends on input size";
+  };
+
+  // Get space complexity
+  const getSpaceComplexity = (projectId) => {
+    const complexities = {
+      calculator: "O(1)",
+      "odd-even": "O(1)",
+      "prime-number": "O(1)",
+      "bubble-sort": "O(1)",
+      "binary-search": "O(1)",
+      fibonacci: "O(n)",
+      "linear-search": "O(1)",
+      "selection-sort": "O(1)",
+      "palindrome-checker": "O(n)",
+      "factorial-calculator": "O(1)",
+      "password-generator": "O(n)",
+      "gcd-calculator": "O(1)",
+      "number-guessing": "O(1)",
+      "rock-paper-scissors": "O(1)",
+      "mad-libs": "O(n)",
+    };
+    return complexities[projectId] || "O(1)";
+  };
+
+  // Get space complexity description
+  const getSpaceComplexityDesc = (projectId) => {
+    const descriptions = {
+      calculator: "Constant space - uses fixed variables",
+      "odd-even": "Constant space - single variable storage",
+      "prime-number": "Constant space - few variables for checking",
+      "bubble-sort": "Constant space - sorts in place",
+      "binary-search": "Constant space - uses index pointers only",
+      fibonacci: "Linear space - stores sequence in array",
+      "linear-search": "Constant space - uses index variable only",
+      "selection-sort": "Constant space - sorts in place",
+      "palindrome-checker": "Linear space - stores cleaned string",
+      "factorial-calculator": "Constant space - iterative calculation",
+      "password-generator": "Linear space - stores generated password",
+      "gcd-calculator": "Constant space - uses few variables",
+      "number-guessing": "Constant space - stores game state",
+      "rock-paper-scissors": "Constant space - simple variables",
+      "mad-libs": "Linear space - stores story and user input",
+    };
+    return (
+      descriptions[projectId] ||
+      "Uses fixed amount of memory regardless of input size"
+    );
+  };
+
+  // Get use cases for project
+  const getUseCases = (projectId) => {
+    const useCases = {
+      calculator: [
+        "Basic arithmetic",
+        "Mathematical operations",
+        "User interfaces",
+      ],
+      "odd-even": [
+        "Number validation",
+        "Input processing",
+        "Mathematical concepts",
+      ],
+      "prime-number": [
+        "Number theory",
+        "Mathematical validation",
+        "Algorithm optimization",
+      ],
+      "bubble-sort": [
+        "Educational purposes",
+        "Small datasets",
+        "Algorithm learning",
+      ],
+      "binary-search": [
+        "Sorted arrays",
+        "Database queries",
+        "Efficient searching",
+      ],
+      fibonacci: [
+        "Mathematical sequences",
+        "Pattern analysis",
+        "Algorithm study",
+      ],
+      "linear-search": [
+        "Unsorted data",
+        "Simple algorithms",
+        "Sequential processing",
+      ],
+      "selection-sort": [
+        "Educational sorting",
+        "Algorithm comparison",
+        "Data organization",
+      ],
+      "palindrome-checker": [
+        "Text validation",
+        "String processing",
+        "Pattern recognition",
+      ],
+      "factorial-calculator": [
+        "Mathematical calculations",
+        "Recursive algorithms",
+        "Number theory",
+      ],
+      "password-generator": [
+        "Security applications",
+        "Random generation",
+        "User authentication",
+      ],
+      "gcd-calculator": [
+        "Mathematical operations",
+        "Number theory",
+        "Algorithm efficiency",
+      ],
+      "number-guessing": [
+        "Game development",
+        "Random numbers",
+        "User interaction",
+      ],
+      "rock-paper-scissors": [
+        "Game logic",
+        "Decision making",
+        "Probability learning",
+      ],
+      "mad-libs": [
+        "Text processing",
+        "String manipulation",
+        "Creative applications",
+      ],
+    };
+    return (
+      useCases[projectId] || [
+        "Algorithm learning",
+        "Programming practice",
+        "Problem solving",
+      ]
+    );
+  };
+
   return (
     <div className="project-page">
       {/* Enhanced Header */}
@@ -128,7 +307,9 @@ export default function ProjectPage() {
               <div className="stat-item">
                 <span className="stat-icon">🎯</span>
                 <div className="stat-content">
-                  <span className="stat-number">O(n)</span>
+                  <span className="stat-number">
+                    {getTimeComplexity(project.id)}
+                  </span>
                   <span className="stat-label">Complexity</span>
                 </div>
               </div>
@@ -234,7 +415,7 @@ export default function ProjectPage() {
             </div>
           </section>
 
-          {/* Technical Details - Rest of your existing code... */}
+          {/* Technical Details */}
           <section className="details-section">
             <div className="section-header">
               <h2 className="section-title">
@@ -250,26 +431,10 @@ export default function ProjectPage() {
                 </div>
                 <div className="card-content">
                   <div className="complexity-value">
-                    {project.id === "calculator"
-                      ? "O(1)"
-                      : project.id === "bubble-sort"
-                      ? "O(n²)"
-                      : project.id === "binary-search"
-                      ? "O(log n)"
-                      : project.id === "fibonacci"
-                      ? "O(n)"
-                      : "O(√n)"}
+                    {getTimeComplexity(project.id)}
                   </div>
                   <p className="complexity-desc">
-                    {project.id === "calculator"
-                      ? "Constant time - operations are independent of input size"
-                      : project.id === "bubble-sort"
-                      ? "Quadratic time - nested loops for comparisons"
-                      : project.id === "binary-search"
-                      ? "Logarithmic time - divides search space in half"
-                      : project.id === "fibonacci"
-                      ? "Linear time - iterative approach"
-                      : "Square root time - checks divisors up to √n"}
+                    {getTimeComplexityDesc(project.id)}
                   </p>
                 </div>
               </div>
@@ -280,10 +445,11 @@ export default function ProjectPage() {
                   <h3>Space Complexity</h3>
                 </div>
                 <div className="card-content">
-                  <div className="complexity-value">O(1)</div>
+                  <div className="complexity-value">
+                    {getSpaceComplexity(project.id)}
+                  </div>
                   <p className="complexity-desc">
-                    Constant space - uses fixed amount of memory regardless of
-                    input size
+                    {getSpaceComplexityDesc(project.id)}
                   </p>
                 </div>
               </div>
@@ -296,48 +462,11 @@ export default function ProjectPage() {
                 <div className="card-content">
                   <div className="use-cases">
                     <div className="case-tags">
-                      {project.id === "calculator" && (
-                        <>
-                          <span className="case-tag">Basic arithmetic</span>
-                          <span className="case-tag">
-                            Mathematical operations
-                          </span>
-                          <span className="case-tag">User interfaces</span>
-                        </>
-                      )}
-                      {project.id === "bubble-sort" && (
-                        <>
-                          <span className="case-tag">Educational purposes</span>
-                          <span className="case-tag">Small datasets</span>
-                          <span className="case-tag">Algorithm learning</span>
-                        </>
-                      )}
-                      {project.id === "binary-search" && (
-                        <>
-                          <span className="case-tag">Sorted arrays</span>
-                          <span className="case-tag">Database queries</span>
-                          <span className="case-tag">Efficient searching</span>
-                        </>
-                      )}
-                      {project.id === "fibonacci" && (
-                        <>
-                          <span className="case-tag">
-                            Mathematical sequences
-                          </span>
-                          <span className="case-tag">Pattern analysis</span>
-                          <span className="case-tag">Algorithm study</span>
-                        </>
-                      )}
-                      {(project.id === "odd-even" ||
-                        project.id === "prime-number") && (
-                        <>
-                          <span className="case-tag">Number theory</span>
-                          <span className="case-tag">
-                            Mathematical validation
-                          </span>
-                          <span className="case-tag">Input processing</span>
-                        </>
-                      )}
+                      {getUseCases(project.id).map((useCase, index) => (
+                        <span key={index} className="case-tag">
+                          {useCase}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
