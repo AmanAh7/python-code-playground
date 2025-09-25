@@ -76,11 +76,161 @@ export default function CodeRunner({ project }) {
             }
             break;
 
+          case "bubble-sort":
+            const numbers = inputs.numbers
+              ? inputs.numbers
+                  .split(" ")
+                  .map((n) => parseInt(n))
+                  .filter((n) => !isNaN(n))
+              : [];
+            if (numbers.length === 0) {
+              result = "Please enter valid numbers separated by spaces";
+            } else {
+              const original = [...numbers];
+              let swaps = 0;
+              let comparisons = 0;
+
+              result = `Original array: [${original.join(
+                ", "
+              )}]\n\nSorting steps:\n`;
+
+              for (let i = 0; i < numbers.length - 1; i++) {
+                let swappedInPass = false;
+                result += `\nPass ${i + 1}:\n`;
+
+                for (let j = 0; j < numbers.length - i - 1; j++) {
+                  comparisons++;
+                  result += `  Compare ${numbers[j]} and ${numbers[j + 1]} → `;
+
+                  if (numbers[j] > numbers[j + 1]) {
+                    [numbers[j], numbers[j + 1]] = [numbers[j + 1], numbers[j]];
+                    swaps++;
+                    swappedInPass = true;
+                    result += `Swap! Array: [${numbers.join(", ")}]\n`;
+                  } else {
+                    result += "No swap needed\n";
+                  }
+                }
+
+                if (!swappedInPass) {
+                  result += "  Array is already sorted!\n";
+                  break;
+                }
+              }
+
+              result += `\nFinal sorted array: [${numbers.join(", ")}]\n`;
+              result += `Total comparisons: ${comparisons}\n`;
+              result += `Total swaps: ${swaps}`;
+            }
+            break;
+
+          case "binary-search":
+            const searchArray = inputs.numbers
+              ? inputs.numbers
+                  .split(" ")
+                  .map((n) => parseInt(n))
+                  .filter((n) => !isNaN(n))
+              : [];
+            const target = parseInt(inputs.target);
+
+            if (searchArray.length === 0) {
+              result = "Please enter valid sorted numbers";
+            } else if (isNaN(target)) {
+              result = "Please enter a valid target number";
+            } else {
+              let left = 0;
+              let right = searchArray.length - 1;
+              let comparisons = 0;
+              let found = false;
+
+              result = `Searching for ${target} in: [${searchArray.join(
+                ", "
+              )}]\n\nSearch steps:\n`;
+
+              while (left <= right && !found) {
+                const mid = Math.floor((left + right) / 2);
+                comparisons++;
+
+                result += `\nStep ${comparisons}:\n`;
+                result += `  Left: ${left}, Right: ${right}, Mid: ${mid}\n`;
+                result += `  Check arr[${mid}] = ${searchArray[mid]}\n`;
+
+                if (searchArray[mid] === target) {
+                  result += `  🎉 Found ${target} at index ${mid}!\n`;
+                  found = true;
+                } else if (searchArray[mid] < target) {
+                  result += `  ${searchArray[mid]} < ${target}, search right half\n`;
+                  left = mid + 1;
+                } else {
+                  result += `  ${searchArray[mid]} > ${target}, search left half\n`;
+                  right = mid - 1;
+                }
+              }
+
+              if (!found) {
+                result += `\n❌ ${target} not found in array\n`;
+              }
+              result += `\nTotal comparisons: ${comparisons}`;
+
+              // Show efficiency info
+              const maxComparisons = Math.ceil(Math.log2(searchArray.length));
+              result += `\nMax possible comparisons: ${maxComparisons} (log₂${searchArray.length})`;
+            }
+            break;
+
+          case "fibonacci":
+            const count = parseInt(inputs.count);
+            if (isNaN(count) || count <= 0) {
+              result = "Please enter a positive number";
+            } else if (count > 30) {
+              result =
+                "Please enter a number less than or equal to 30 for better visualization";
+            } else {
+              const sequence = [];
+              result = `Generating first ${count} Fibonacci numbers:\n\n`;
+
+              if (count >= 1) {
+                sequence[0] = 0;
+                result += "F(0) = 0\n";
+              }
+
+              if (count >= 2) {
+                sequence[1] = 1;
+                result += "F(1) = 1\n";
+              }
+
+              for (let i = 2; i < count; i++) {
+                sequence[i] = sequence[i - 1] + sequence[i - 2];
+                result += `F(${i}) = F(${i - 1}) + F(${i - 2}) = ${
+                  sequence[i - 1]
+                } + ${sequence[i - 2]} = ${sequence[i]}\n`;
+              }
+
+              result += `\nComplete sequence: [${sequence.join(", ")}]`;
+
+              // Show mathematical properties
+              if (count > 5) {
+                const ratio = sequence[count - 1] / sequence[count - 2];
+                result += `\nGolden ratio approximation: ${ratio.toFixed(8)}`;
+                result += `\n(True golden ratio: 1.61803399...)`;
+              }
+
+              // Show sum property
+              if (count >= 3) {
+                const sum = sequence.reduce((a, b) => a + b, 0);
+                result += `\nSum of all numbers: ${sum}`;
+                result += `\nSum formula: F(n+2) - 1 = ${
+                  sequence[count + 1] - 1
+                } ≈ ${sum}`;
+              }
+            }
+            break;
+
           default:
-            result = "Unknown project";
+            result = `Algorithm "${project.id}" execution not implemented yet`;
         }
       } catch (error) {
-        result = "Error executing code";
+        result = "Error executing code: " + error.message;
       }
 
       setOutput(result);

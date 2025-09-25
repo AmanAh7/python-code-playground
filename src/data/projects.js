@@ -1,4 +1,5 @@
 export const projects = [
+  // Your existing 3 projects
   {
     id: "calculator",
     title: "Calculator",
@@ -121,6 +122,156 @@ check_prime()`,
     ],
     inputs: [
       { name: "number", type: "number", label: "Enter a number to check" },
+    ],
+  },
+
+  // NEW ALGORITHMS - ADD THESE 3
+  {
+    id: "bubble-sort",
+    title: "Bubble Sort Algorithm",
+    description:
+      "Visualize how bubble sort compares and swaps elements to sort an array",
+    code: `def bubble_sort(arr):
+    n = len(arr)
+    comparisons = 0
+    swaps = 0
+    
+    print(f"Original array: {arr}")
+    print("\\nStep-by-step sorting process:")
+    
+    for i in range(n):
+        swapped = False
+        print(f"\\n--- Pass {i + 1} ---")
+        
+        for j in range(0, n - i - 1):
+            comparisons += 1
+            print(f"Comparing {arr[j]} and {arr[j + 1]}", end=" ")
+            
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swaps += 1
+                swapped = True
+                print(f"→ Swap! Array: {arr}")
+            else:
+                print("→ No swap needed")
+        
+        if not swapped:
+            print("Array is already sorted!")
+            break
+    
+    print(f"\\nSorted array: {arr}")
+    print(f"Comparisons: {comparisons}, Swaps: {swaps}")
+    return arr
+
+numbers = list(map(int, input("Enter numbers: ").split()))
+bubble_sort(numbers)`,
+    logic: [
+      "Compare adjacent elements in the array",
+      "Swap if left element is greater than right element",
+      "Continue passes until no swaps are needed",
+      "Track comparisons and swaps for analysis",
+      "Display step-by-step sorting process",
+    ],
+    inputs: [
+      {
+        name: "numbers",
+        type: "text",
+        label: "Numbers (space-separated): e.g., 64 34 25 12 22",
+      },
+    ],
+  },
+
+  {
+    id: "binary-search",
+    title: "Binary Search Algorithm",
+    description: "Efficiently search in sorted arrays using divide-and-conquer",
+    code: `def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    comparisons = 0
+    
+    print(f"Searching for {target} in: {arr}")
+    
+    while left <= right:
+        mid = (left + right) // 2
+        comparisons += 1
+        
+        print(f"Step {comparisons}: Check arr[{mid}] = {arr[mid]}")
+        
+        if arr[mid] == target:
+            print(f"Found {target} at index {mid}!")
+            print(f"Total comparisons: {comparisons}")
+            return mid
+        elif arr[mid] < target:
+            print(f"{arr[mid]} < {target}, search right half")
+            left = mid + 1
+        else:
+            print(f"{arr[mid]} > {target}, search left half")
+            right = mid - 1
+    
+    print(f"{target} not found. Comparisons: {comparisons}")
+    return -1
+
+arr = list(map(int, input("Sorted numbers: ").split()))
+target = int(input("Search for: "))
+binary_search(arr, target)`,
+    logic: [
+      "Start with sorted array and target value",
+      "Calculate middle index and compare with target",
+      "If target is smaller, search left half",
+      "If target is larger, search right half",
+      "Repeat until found or search space exhausted",
+    ],
+    inputs: [
+      {
+        name: "numbers",
+        type: "text",
+        label: "Sorted numbers: e.g., 1 3 5 7 9 11 13",
+      },
+      { name: "target", type: "number", label: "Number to search for" },
+    ],
+  },
+
+  {
+    id: "fibonacci",
+    title: "Fibonacci Generator",
+    description: "Generate Fibonacci sequence with step-by-step calculations",
+    code: `def fibonacci_sequence(n):
+    if n <= 0:
+        print("Please enter positive number")
+        return []
+    elif n == 1:
+        return [0]
+    
+    sequence = [0, 1]
+    print(f"Generating {n} Fibonacci numbers:")
+    print("F(0) = 0")
+    print("F(1) = 1")
+    
+    for i in range(2, n):
+        next_fib = sequence[i-1] + sequence[i-2]
+        sequence.append(next_fib)
+        print(f"F({i}) = F({i-1}) + F({i-2}) = {sequence[i-1]} + {sequence[i-2]} = {next_fib}")
+    
+    print(f"\\nComplete sequence: {sequence}")
+    
+    # Show golden ratio approximation
+    if len(sequence) > 5:
+        ratio = sequence[-1] / sequence[-2]
+        print(f"Golden ratio approximation: {ratio:.6f}")
+    
+    return sequence
+
+n = int(input("How many Fibonacci numbers? "))
+fibonacci_sequence(n)`,
+    logic: [
+      "Handle base cases: F(0)=0, F(1)=1",
+      "Use iterative approach for efficiency",
+      "Calculate F(n) = F(n-1) + F(n-2)",
+      "Display step-by-step calculations",
+      "Show golden ratio convergence for larger sequences",
+    ],
+    inputs: [
+      { name: "count", type: "number", label: "Count (1-20 recommended)" },
     ],
   },
 ];

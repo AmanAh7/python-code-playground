@@ -2,17 +2,21 @@ import { projects } from "@/data/projects";
 import CodeRunner from "@/components/CodeRunner";
 import Link from "next/link";
 
-export default function ProjectPage({ params }) {
-  const project = projects.find((p) => p.id === params.slug);
+export default async function ProjectPage({ params }) {
+  // Await params in Next.js 15
+  const { slug } = await params;
+  const project = projects.find((p) => p.id === slug);
 
   if (!project) {
     return (
       <div className="error-page">
         <div className="error-content">
+          <div className="error-icon">🔍</div>
           <h1>Project Not Found</h1>
           <p>The project you&apos;re looking for doesn&apos;t exist.</p>
           <Link href="/" className="back-button">
-            ← Back to Home
+            <span>←</span>
+            <span>Back to Home</span>
           </Link>
         </div>
       </div>
@@ -21,41 +25,60 @@ export default function ProjectPage({ params }) {
 
   return (
     <div className="project-page">
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className="project-header">
-        <div className="header-nav">
-          <Link href="/" className="nav-link">
-            ← Home
-          </Link>
-          <span className="nav-separator">/</span>
-          <Link href="/projects" className="nav-link">
-            Projects
-          </Link>
-          <span className="nav-separator">/</span>
-          <span className="nav-current">{project.title}</span>
-        </div>
-
+        <div className="header-bg-pattern"></div>
         <div className="header-content">
-          <div className="project-badge">
-            <span className="badge-icon">🐍</span>
-            <span>Python Algorithm</span>
-          </div>
+          {/* Breadcrumb Navigation */}
+          <nav className="breadcrumb-nav">
+            <Link href="/" className="breadcrumb-link">
+              <span>🏠</span>
+              <span>Home</span>
+            </Link>
+            <span className="breadcrumb-separator">→</span>
+            <Link href="/projects" className="breadcrumb-link">
+              <span>📁</span>
+              <span>Projects</span>
+            </Link>
+            <span className="breadcrumb-separator">→</span>
+            <span className="breadcrumb-current">{project.title}</span>
+          </nav>
 
-          <h1 className="project-title">{project.title}</h1>
-          <p className="project-description">{project.description}</p>
+          {/* Project Info */}
+          <div className="project-info">
+            <div className="project-badge">
+              <span className="badge-icon">🐍</span>
+              <span>Python Algorithm</span>
+            </div>
 
-          <div className="project-meta">
-            <div className="meta-item">
-              <span className="meta-icon">📋</span>
-              <span>{project.logic.length} Algorithm Steps</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-icon">⚡</span>
-              <span>Interactive Execution</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-icon">🔍</span>
-              <span>Real-time Analysis</span>
+            <h1 className="project-title">{project.title}</h1>
+            <p className="project-description">{project.description}</p>
+
+            {/* Quick Stats */}
+            <div className="project-stats">
+              <div className="stat-item">
+                <span className="stat-icon">📋</span>
+                <div className="stat-content">
+                  <span className="stat-number">{project.logic.length}</span>
+                  <span className="stat-label">Steps</span>
+                </div>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">⚡</span>
+                <div className="stat-content">
+                  <span className="stat-number">
+                    {project.code.split("\n").length}
+                  </span>
+                  <span className="stat-label">Lines</span>
+                </div>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">🎯</span>
+                <div className="stat-content">
+                  <span className="stat-number">O(n)</span>
+                  <span className="stat-label">Complexity</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -63,55 +86,81 @@ export default function ProjectPage({ params }) {
 
       {/* Main Content */}
       <div className="project-content">
-        <div className="content-grid">
-          {/* Left Column - Code & Logic */}
-          <div className="code-section">
+        <div className="content-wrapper">
+          {/* Interactive Runner - Top Priority */}
+          <section className="runner-section">
+            <div className="section-header">
+              <h2 className="section-title">
+                <span className="title-icon">🚀</span>
+                <span>Interactive Code Runner</span>
+              </h2>
+              <p className="section-subtitle">
+                Test the algorithm with your own inputs
+              </p>
+            </div>
+            <CodeRunner project={project} />
+          </section>
+
+          {/* Code Display */}
+          <section className="code-section">
             <div className="section-header">
               <h2 className="section-title">
                 <span className="title-icon">💻</span>
-                Python Implementation
+                <span>Python Implementation</span>
               </h2>
-              <div className="code-stats">
-                <span className="stat">
-                  Lines: {project.code.split("\n").length}
-                </span>
-                <span className="stat">Complexity: O(n)</span>
+              <div className="code-actions">
+                <button className="action-btn" title="Copy Code">
+                  <span>📋</span>
+                  <span>Copy</span>
+                </button>
+                <button className="action-btn" title="Download">
+                  <span>💾</span>
+                  <span>Download</span>
+                </button>
               </div>
             </div>
 
-            {/* Code Display */}
             <div className="code-container">
               <div className="code-header">
                 <div className="code-title">
                   <span className="file-icon">📄</span>
                   <span>{project.id}.py</span>
                 </div>
-                <div className="code-actions">
-                  <button className="action-btn" title="Copy Code">
-                    📋
-                  </button>
-                  <button className="action-btn" title="Download">
-                    💾
-                  </button>
+                <div className="code-meta">
+                  <span className="code-lines">
+                    {project.code.split("\n").length} lines
+                  </span>
                 </div>
               </div>
 
               <div className="code-editor">
+                <div className="line-numbers">
+                  {project.code.split("\n").map((_, index) => (
+                    <span key={index} className="line-number">
+                      {index + 1}
+                    </span>
+                  ))}
+                </div>
                 <pre className="code-block">
                   <code className="python-code">{project.code}</code>
                 </pre>
               </div>
             </div>
+          </section>
 
-            {/* Algorithm Logic */}
-            <div className="logic-section">
-              <div className="logic-header">
-                <h3 className="logic-title">
-                  <span className="title-icon">🧠</span>
-                  Algorithm Logic & Flow
-                </h3>
-              </div>
+          {/* Algorithm Logic */}
+          <section className="logic-section">
+            <div className="section-header">
+              <h2 className="section-title">
+                <span className="title-icon">🧠</span>
+                <span>Algorithm Logic & Flow</span>
+              </h2>
+              <p className="section-subtitle">
+                Step-by-step breakdown of how the algorithm works
+              </p>
+            </div>
 
+            <div className="logic-container">
               <div className="logic-steps">
                 {project.logic.map((step, index) => (
                   <div key={index} className="logic-step">
@@ -119,58 +168,157 @@ export default function ProjectPage({ params }) {
                       <span className="step-number">{index + 1}</span>
                     </div>
                     <div className="step-content">
-                      <p className="step-text">{step}</p>
+                      <div className="step-text">{step}</div>
+                      {index < project.logic.length - 1 && (
+                        <div className="step-arrow">↓</div>
+                      )}
                     </div>
-                    {index < project.logic.length - 1 && (
-                      <div className="step-connector"></div>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Right Column - Interactive Runner */}
-          <div className="runner-section">
+          {/* Technical Details */}
+          <section className="details-section">
             <div className="section-header">
               <h2 className="section-title">
-                <span className="title-icon">🚀</span>
-                Live Code Execution
+                <span className="title-icon">📊</span>
+                <span>Technical Analysis</span>
               </h2>
-              <p className="section-subtitle">
-                Test the algorithm with your own inputs
-              </p>
             </div>
 
-            <CodeRunner project={project} />
-
-            {/* Additional Info */}
-            <div className="info-cards">
-              <div className="info-card">
-                <div className="card-icon">⏱️</div>
+            <div className="details-grid">
+              <div className="detail-card">
+                <div className="card-header">
+                  <span className="card-icon">⏱️</span>
+                  <h3>Time Complexity</h3>
+                </div>
                 <div className="card-content">
-                  <h4>Time Complexity</h4>
-                  <p>O(1) - O(√n)</p>
+                  <div className="complexity-value">
+                    {project.id === "calculator"
+                      ? "O(1)"
+                      : project.id === "bubble-sort"
+                      ? "O(n²)"
+                      : project.id === "binary-search"
+                      ? "O(log n)"
+                      : project.id === "fibonacci"
+                      ? "O(n)"
+                      : "O(√n)"}
+                  </div>
+                  <p className="complexity-desc">
+                    {project.id === "calculator"
+                      ? "Constant time - operations are independent of input size"
+                      : project.id === "bubble-sort"
+                      ? "Quadratic time - nested loops for comparisons"
+                      : project.id === "binary-search"
+                      ? "Logarithmic time - divides search space in half"
+                      : project.id === "fibonacci"
+                      ? "Linear time - iterative approach"
+                      : "Square root time - checks divisors up to √n"}
+                  </p>
                 </div>
               </div>
 
-              <div className="info-card">
-                <div className="card-icon">💾</div>
+              <div className="detail-card">
+                <div className="card-header">
+                  <span className="card-icon">💾</span>
+                  <h3>Space Complexity</h3>
+                </div>
                 <div className="card-content">
-                  <h4>Space Complexity</h4>
-                  <p>O(1) constant</p>
+                  <div className="complexity-value">O(1)</div>
+                  <p className="complexity-desc">
+                    Constant space - uses fixed amount of memory regardless of
+                    input size
+                  </p>
                 </div>
               </div>
 
-              <div className="info-card">
-                <div className="card-icon">🎯</div>
+              <div className="detail-card">
+                <div className="card-header">
+                  <span className="card-icon">🎯</span>
+                  <h3>Use Cases</h3>
+                </div>
                 <div className="card-content">
-                  <h4>Use Cases</h4>
-                  <p>Basic algorithms, Learning</p>
+                  <div className="use-cases">
+                    <div className="case-tags">
+                      {project.id === "calculator" && (
+                        <>
+                          <span className="case-tag">Basic arithmetic</span>
+                          <span className="case-tag">
+                            Mathematical operations
+                          </span>
+                          <span className="case-tag">User interfaces</span>
+                        </>
+                      )}
+                      {project.id === "bubble-sort" && (
+                        <>
+                          <span className="case-tag">Educational purposes</span>
+                          <span className="case-tag">Small datasets</span>
+                          <span className="case-tag">Algorithm learning</span>
+                        </>
+                      )}
+                      {project.id === "binary-search" && (
+                        <>
+                          <span className="case-tag">Sorted arrays</span>
+                          <span className="case-tag">Database queries</span>
+                          <span className="case-tag">Efficient searching</span>
+                        </>
+                      )}
+                      {project.id === "fibonacci" && (
+                        <>
+                          <span className="case-tag">
+                            Mathematical sequences
+                          </span>
+                          <span className="case-tag">Pattern analysis</span>
+                          <span className="case-tag">Algorithm study</span>
+                        </>
+                      )}
+                      {(project.id === "odd-even" ||
+                        project.id === "prime-number") && (
+                        <>
+                          <span className="case-tag">Number theory</span>
+                          <span className="case-tag">
+                            Mathematical validation
+                          </span>
+                          <span className="case-tag">Input processing</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-card">
+                <div className="card-header">
+                  <span className="card-icon">🔧</span>
+                  <h3>Key Features</h3>
+                </div>
+                <div className="card-content">
+                  <ul className="feature-list">
+                    <li>Interactive execution</li>
+                    <li>Step-by-step visualization</li>
+                    <li>Error handling included</li>
+                    <li>Performance metrics</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
+
+          {/* Navigation */}
+          <section className="navigation-section">
+            <div className="nav-container">
+              <Link href="/projects" className="nav-button secondary">
+                <span>←</span>
+                <span>All Projects</span>
+              </Link>
+              <Link href="/" className="nav-button primary">
+                <span>🏠</span>
+                <span>Home</span>
+              </Link>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -178,7 +326,7 @@ export default function ProjectPage({ params }) {
 }
 
 // Generate static params for all projects
-export function generateStaticParams() {
+export async function generateStaticParams() {
   return projects.map((project) => ({
     slug: project.id,
   }));
