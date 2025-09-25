@@ -1,10 +1,14 @@
+"use client";
+
 import { projects } from "@/data/projects";
 import CodeRunner from "@/components/CodeRunner";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 
-export default async function ProjectPage({ params }) {
-  // Await params in Next.js 15
-  const { slug } = await params;
+export default function ProjectPage() {
+  const params = useParams();
+  const slug = params.slug;
   const project = projects.find((p) => p.id === slug);
 
   if (!project) {
@@ -22,6 +26,56 @@ export default async function ProjectPage({ params }) {
       </div>
     );
   }
+
+  // Copy function
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(project.code);
+
+      // Visual feedback
+      const button = document.querySelector(".copy-btn");
+      const originalText = button.innerHTML;
+      button.innerHTML = "<span>✅</span><span>Copied!</span>";
+
+      setTimeout(() => {
+        button.innerHTML = originalText;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = project.code;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
+  };
+
+  // Download function
+  const handleDownload = () => {
+    try {
+      const element = document.createElement("a");
+      const file = new Blob([project.code], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = `${project.id}.py`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      URL.revokeObjectURL(element.href);
+
+      // Visual feedback
+      const button = document.querySelector(".download-btn");
+      const originalText = button.innerHTML;
+      button.innerHTML = "<span>✅</span><span>Downloaded!</span>";
+
+      setTimeout(() => {
+        button.innerHTML = originalText;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to download:", err);
+    }
+  };
 
   return (
     <div className="project-page">
@@ -47,7 +101,6 @@ export default async function ProjectPage({ params }) {
           {/* Project Info */}
           <div className="project-info">
             <div className="project-badge">
-              <span className="badge-icon">🐍</span>
               <span>Python Algorithm</span>
             </div>
 
@@ -87,11 +140,10 @@ export default async function ProjectPage({ params }) {
       {/* Main Content */}
       <div className="project-content">
         <div className="content-wrapper">
-          {/* Interactive Runner - Top Priority */}
+          {/* Interactive Runner */}
           <section className="runner-section">
             <div className="section-header">
               <h2 className="section-title">
-                <span className="title-icon">🚀</span>
                 <span>Interactive Code Runner</span>
               </h2>
               <p className="section-subtitle">
@@ -105,15 +157,22 @@ export default async function ProjectPage({ params }) {
           <section className="code-section">
             <div className="section-header">
               <h2 className="section-title">
-                <span className="title-icon">💻</span>
                 <span>Python Implementation</span>
               </h2>
               <div className="code-actions">
-                <button className="action-btn" title="Copy Code">
+                <button
+                  className="action-btn copy-btn"
+                  onClick={handleCopy}
+                  title="Copy Code"
+                >
                   <span>📋</span>
                   <span>Copy</span>
                 </button>
-                <button className="action-btn" title="Download">
+                <button
+                  className="action-btn download-btn"
+                  onClick={handleDownload}
+                  title="Download"
+                >
                   <span>💾</span>
                   <span>Download</span>
                 </button>
@@ -152,7 +211,6 @@ export default async function ProjectPage({ params }) {
           <section className="logic-section">
             <div className="section-header">
               <h2 className="section-title">
-                <span className="title-icon">🧠</span>
                 <span>Algorithm Logic & Flow</span>
               </h2>
               <p className="section-subtitle">
@@ -169,9 +227,6 @@ export default async function ProjectPage({ params }) {
                     </div>
                     <div className="step-content">
                       <div className="step-text">{step}</div>
-                      {index < project.logic.length - 1 && (
-                        <div className="step-arrow">↓</div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -179,11 +234,10 @@ export default async function ProjectPage({ params }) {
             </div>
           </section>
 
-          {/* Technical Details */}
+          {/* Technical Details - Rest of your existing code... */}
           <section className="details-section">
             <div className="section-header">
               <h2 className="section-title">
-                <span className="title-icon">📊</span>
                 <span>Technical Analysis</span>
               </h2>
             </div>
@@ -323,11 +377,4 @@ export default async function ProjectPage({ params }) {
       </div>
     </div>
   );
-}
-
-// Generate static params for all projects
-export async function generateStaticParams() {
-  return projects.map((project) => ({
-    slug: project.id,
-  }));
 }
