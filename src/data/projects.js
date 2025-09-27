@@ -3746,4 +3746,1668 @@ demo_quotes_scraper()`,
       { name: "tag_filter", type: "text", label: "Filter by tag (optional)" },
     ],
   },
+  {
+    id: "email-automation",
+    title: "Email Automation Tool",
+    description:
+      "Automate email sending with attachments, templates, and scheduled delivery using SMTP",
+    category: "Automation",
+    difficulty: "Advanced",
+    tags: ["email", "smtp", "automation", "templates"],
+    code: `import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import os
+import json
+from datetime import datetime
+import schedule
+import time
+
+class EmailAutomation:
+    def __init__(self):
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587
+        self.email = ""
+        self.password = ""
+        self.templates = {}
+        self.load_templates()
+    
+    def load_templates(self):
+        """Load email templates from file"""
+        try:
+            with open('email_templates.json', 'r') as f:
+                self.templates = json.load(f)
+        except FileNotFoundError:
+            self.templates = {
+                "welcome": {
+                    "subject": "Welcome to Our Service!",
+                    "body": "Dear {name},\\n\\nWelcome to our platform! We're excited to have you on board.\\n\\nBest regards,\\nThe Team"
+                },
+                "reminder": {
+                    "subject": "Friendly Reminder",
+                    "body": "Hi {name},\\n\\nThis is a friendly reminder about {event} scheduled for {date}.\\n\\nThank you!"
+                },
+                "newsletter": {
+                    "subject": "Monthly Newsletter - {month}",
+                    "body": "Dear Subscriber,\\n\\nHere's what's new this month:\\n\\n{content}\\n\\nStay tuned for more updates!"
+                }
+            }
+            self.save_templates()
+    
+    def save_templates(self):
+        """Save email templates to file"""
+        try:
+            with open('email_templates.json', 'w') as f:
+                json.dump(self.templates, f, indent=2)
+        except Exception as e:
+            print(f"Error saving templates: {e}")
+    
+    def setup_smtp_connection(self, email, password):
+        """Setup SMTP connection"""
+        self.email = email
+        self.password = password
+        
+        try:
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls(context=context)
+            server.login(email, password)
+            return server
+        except Exception as e:
+            print(f"Failed to connect to SMTP server: {e}")
+            return None
+    
+    def create_email(self, recipient, subject, body, attachments=None):
+        """Create email message"""
+        msg = MIMEMultipart()
+        msg['From'] = self.email
+        msg['To'] = recipient
+        msg['Subject'] = subject
+        
+        # Add body to email
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Add attachments if provided
+        if attachments:
+            for file_path in attachments:
+                if os.path.isfile(file_path):
+                    with open(file_path, "rb") as attachment:
+                        part = MIMEBase('application', 'octet-stream')
+                        part.set_payload(attachment.read())
+                    
+                    encoders.encode_base64(part)
+                    part.add_header(
+                        'Content-Disposition',
+                        f'attachment; filename= {os.path.basename(file_path)}'
+                    )
+                    msg.attach(part)
+        
+        return msg
+    
+    def send_single_email(self, recipient, subject, body, attachments=None):
+        """Send a single email"""
+        if not self.email or not self.password:
+            return {"error": "Email credentials not set"}
+        
+        server = self.setup_smtp_connection(self.email, self.password)
+        if not server:
+            return {"error": "Failed to connect to SMTP server"}
+        
+        try:
+            msg = self.create_email(recipient, subject, body, attachments)
+            text = msg.as_string()
+            server.sendmail(self.email, recipient, text)
+            server.quit()
+            
+            return {
+                "success": True,
+                "message": f"Email sent successfully to {recipient}",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            return {"error": f"Failed to send email: {e}"}
+    
+    def send_bulk_emails(self, recipients, subject, body, personalize=True):
+        """Send emails to multiple recipients"""
+        if not isinstance(recipients, list):
+            return {"error": "Recipients must be a list"}
+        
+        server = self.setup_smtp_connection(self.email, self.password)
+        if not server:
+            return {"error": "Failed to connect to SMTP server"}
+        
+        results = []
+        successful = 0
+        failed = 0
+        
+        try:
+            for recipient in recipients:
+                try:
+                    # Personalize email if needed
+                    personal_body = body
+                    if personalize and isinstance(recipient, dict):
+                        email_addr = recipient.get('email', '')
+                        name = recipient.get('name', email_addr.split('@')[0])
+                        personal_body = body.format(name=name, **recipient)
+                        recipient = email_addr
+                    
+                    msg = self.create_email(recipient, subject, personal_body)
+                    text = msg.as_string()
+                    server.sendmail(self.email, recipient, text)
+                    
+                    results.append({
+                        "recipient": recipient,
+                        "status": "success",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    successful += 1
+                    
+                    # Small delay to avoid overwhelming the server
+                    time.sleep(0.1)
+                    
+                except Exception as e:
+                    results.append({
+                        "recipient": recipient,
+                        "status": "failed",
+                        "error": str(e)
+                    })
+                    failed += 1
+            
+            server.quit()
+            
+            return {
+                "summary": {
+                    "total": len(recipients),
+                    "successful": successful,
+                    "failed": failed
+                },
+                "results": results
+            }
+            
+        except Exception as e:
+            return {"error": f"Bulk email operation failed: {e}"}
+    
+    def use_template(self, template_name, **kwargs):
+        """Use predefined template with variables"""
+        if template_name not in self.templates:
+            return {"error": f"Template '{template_name}' not found"}
+        
+        template = self.templates[template_name]
+        
+        try:
+            subject = template['subject'].format(**kwargs)
+            body = template['body'].format(**kwargs)
+            
+            return {
+                "subject": subject,
+                "body": body
+            }
+        except KeyError as e:
+            return {"error": f"Missing template variable: {e}"}
+    
+    def schedule_email(self, recipient, subject, body, send_time):
+        """Schedule email to be sent at specific time"""
+        def send_scheduled_email():
+            result = self.send_single_email(recipient, subject, body)
+            print(f"Scheduled email result: {result}")
+        
+        schedule.every().day.at(send_time).do(send_scheduled_email)
+        
+        return {
+            "message": f"Email scheduled to {recipient} at {send_time}",
+            "recipient": recipient,
+            "scheduled_time": send_time
+        }
+    
+    def create_newsletter(self, subscriber_list, content, month=None):
+        """Create and send newsletter"""
+        if not month:
+            month = datetime.now().strftime("%B %Y")
+        
+        template_data = self.use_template("newsletter", month=month, content=content)
+        
+        if "error" in template_data:
+            return template_data
+        
+        return self.send_bulk_emails(
+            subscriber_list,
+            template_data["subject"],
+            template_data["body"]
+        )
+
+# Demo usage
+def demo_email_automation():
+    print("📧 Email Automation Tool Demo")
+    print("Automate email sending with templates and scheduling")
+    print()
+    
+    automation = EmailAutomation()
+    
+    # Demo template usage
+    template_result = automation.use_template(
+        "welcome",
+        name="John Doe"
+    )
+    
+    print("📝 Template Demo:")
+    if "error" not in template_result:
+        print(f"Subject: {template_result['subject']}")
+        print(f"Body: {template_result['body']}")
+    
+    print("\\n✨ Features:")
+    print("• SMTP email sending")
+    print("• Template system with variables")
+    print("• Bulk email support")
+    print("• File attachments")
+    print("• Email scheduling")
+    print("• Newsletter automation")
+    print("• Delivery tracking")
+    
+    print("\\n💡 Setup Requirements:")
+    print("1. Gmail account with App Password")
+    print("2. Install required packages: pip install schedule")
+    print("3. Configure SMTP settings")
+    print("4. Create email templates")
+
+demo_email_automation()`,
+    logic: [
+      "Set up SMTP connection with Gmail using SSL/TLS encryption for secure email transmission",
+      "Create a template system that allows dynamic variable substitution in email subjects and bodies",
+      "Implement bulk email functionality with personalization for each recipient",
+      "Add file attachment support by encoding files in base64 and attaching them to MIME messages",
+      "Create email scheduling system using the schedule library to send emails at specific times",
+      "Implement error handling and delivery tracking for monitoring email send status",
+      "Provide newsletter automation with subscriber list management and content templating",
+    ],
+    inputs: [
+      { name: "recipient", type: "text", label: "Recipient email address" },
+      { name: "subject", type: "text", label: "Email subject" },
+      { name: "body", type: "text", label: "Email body content" },
+      {
+        name: "template",
+        type: "select",
+        options: ["welcome", "reminder", "newsletter"],
+        label: "Email template",
+      },
+    ],
+  },
+
+  {
+    id: "file-management-system",
+    title: "File Management System",
+    description:
+      "Automate file organization, backup, and cleanup with advanced filtering and monitoring",
+    category: "Automation",
+    difficulty: "Advanced",
+    tags: ["files", "automation", "organization", "backup"],
+    code: `import os
+import shutil
+import json
+import hashlib
+from datetime import datetime, timedelta
+import zipfile
+import glob
+from pathlib import Path
+import schedule
+import time
+
+class FileManagementSystem:
+    def __init__(self):
+        self.config_file = "file_management_config.json"
+        self.log_file = "file_management.log"
+        self.load_config()
+    
+    def load_config(self):
+        """Load configuration from file"""
+        default_config = {
+            "watch_directories": [],
+            "organization_rules": {
+                "images": {"extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp"], "folder": "Images"},
+                "documents": {"extensions": [".pdf", ".doc", ".docx", ".txt", ".rtf"], "folder": "Documents"},
+                "videos": {"extensions": [".mp4", ".avi", ".mkv", ".mov", ".wmv"], "folder": "Videos"},
+                "music": {"extensions": [".mp3", ".wav", ".flac", ".aac"], "folder": "Music"},
+                "archives": {"extensions": [".zip", ".rar", ".7z", ".tar", ".gz"], "folder": "Archives"},
+                "code": {"extensions": [".py", ".js", ".html", ".css", ".java", ".cpp"], "folder": "Code"}
+            },
+            "cleanup_rules": {
+                "temp_files": {"extensions": [".tmp", ".temp", ".cache"], "days_old": 7},
+                "log_files": {"extensions": [".log"], "days_old": 30},
+                "backup_files": {"extensions": [".bak", ".backup"], "days_old": 60}
+            },
+            "backup_settings": {
+                "backup_directory": "backups",
+                "compression": True,
+                "retention_days": 90
+            }
+        }
+        
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r') as f:
+                    self.config = json.load(f)
+            else:
+                self.config = default_config
+                self.save_config()
+        except Exception as e:
+            print(f"Error loading config: {e}")
+            self.config = default_config
+    
+    def save_config(self):
+        """Save configuration to file"""
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(self.config, f, indent=2)
+        except Exception as e:
+            print(f"Error saving config: {e}")
+    
+    def log_action(self, action, details=""):
+        """Log file management actions"""
+        timestamp = datetime.now().isoformat()
+        log_entry = f"[{timestamp}] {action}: {details}\\n"
+        
+        try:
+            with open(self.log_file, 'a') as f:
+                f.write(log_entry)
+        except Exception as e:
+            print(f"Error writing to log: {e}")
+        
+        print(log_entry.strip())
+    
+    def get_file_hash(self, file_path):
+        """Generate MD5 hash of file for duplicate detection"""
+        hash_md5 = hashlib.md5()
+        try:
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            return hash_md5.hexdigest()
+        except Exception as e:
+            print(f"Error generating hash for {file_path}: {e}")
+            return None
+    
+    def organize_files(self, directory):
+        """Organize files in directory based on rules"""
+        if not os.path.exists(directory):
+            return {"error": f"Directory {directory} does not exist"}
+        
+        organized_count = 0
+        errors = []
+        
+        try:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_ext = os.path.splitext(file)[1].lower()
+                    
+                    # Find matching rule
+                    target_folder = None
+                    for rule_name, rule in self.config["organization_rules"].items():
+                        if file_ext in rule["extensions"]:
+                            target_folder = rule["folder"]
+                            break
+                    
+                    if target_folder:
+                        # Create target directory if it doesn't exist
+                        target_dir = os.path.join(directory, target_folder)
+                        os.makedirs(target_dir, exist_ok=True)
+                        
+                        # Move file
+                        target_path = os.path.join(target_dir, file)
+                        
+                        # Handle filename conflicts
+                        counter = 1
+                        while os.path.exists(target_path):
+                            name, ext = os.path.splitext(file)
+                            target_path = os.path.join(target_dir, f"{name}_{counter}{ext}")
+                            counter += 1
+                        
+                        try:
+                            shutil.move(file_path, target_path)
+                            self.log_action("ORGANIZE", f"Moved {file} to {target_folder}")
+                            organized_count += 1
+                        except Exception as e:
+                            errors.append(f"Failed to move {file}: {e}")
+            
+            return {
+                "organized": organized_count,
+                "errors": errors,
+                "message": f"Organized {organized_count} files"
+            }
+            
+        except Exception as e:
+            return {"error": f"Organization failed: {e}"}
+    
+    def find_duplicates(self, directory):
+        """Find duplicate files based on content hash"""
+        if not os.path.exists(directory):
+            return {"error": f"Directory {directory} does not exist"}
+        
+        file_hashes = {}
+        duplicates = []
+        
+        try:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_hash = self.get_file_hash(file_path)
+                    
+                    if file_hash:
+                        if file_hash in file_hashes:
+                            duplicates.append({
+                                "original": file_hashes[file_hash],
+                                "duplicate": file_path,
+                                "hash": file_hash,
+                                "size": os.path.getsize(file_path)
+                            })
+                        else:
+                            file_hashes[file_hash] = file_path
+            
+            return {
+                "duplicates_found": len(duplicates),
+                "duplicates": duplicates,
+                "space_wasted": sum(dup["size"] for dup in duplicates)
+            }
+            
+        except Exception as e:
+            return {"error": f"Duplicate search failed: {e}"}
+    
+    def cleanup_old_files(self, directory):
+        """Clean up old files based on rules"""
+        if not os.path.exists(directory):
+            return {"error": f"Directory {directory} does not exist"}
+        
+        cleaned_count = 0
+        space_freed = 0
+        errors = []
+        
+        try:
+            current_time = datetime.now()
+            
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_ext = os.path.splitext(file)[1].lower()
+                    
+                    # Check cleanup rules
+                    for rule_name, rule in self.config["cleanup_rules"].items():
+                        if file_ext in rule["extensions"]:
+                            try:
+                                file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+                                days_old = (current_time - file_time).days
+                                
+                                if days_old > rule["days_old"]:
+                                    file_size = os.path.getsize(file_path)
+                                    os.remove(file_path)
+                                    
+                                    self.log_action("CLEANUP", f"Removed {file} ({days_old} days old)")
+                                    cleaned_count += 1
+                                    space_freed += file_size
+                                    
+                            except Exception as e:
+                                errors.append(f"Failed to remove {file}: {e}")
+                            break
+            
+            return {
+                "cleaned": cleaned_count,
+                "space_freed": self.format_bytes(space_freed),
+                "errors": errors,
+                "message": f"Cleaned {cleaned_count} old files"
+            }
+            
+        except Exception as e:
+            return {"error": f"Cleanup failed: {e}"}
+    
+    def backup_directory(self, source_dir, backup_name=None):
+        """Create backup of directory"""
+        if not os.path.exists(source_dir):
+            return {"error": f"Source directory {source_dir} does not exist"}
+        
+        # Create backup directory
+        backup_base = self.config["backup_settings"]["backup_directory"]
+        os.makedirs(backup_base, exist_ok=True)
+        
+        # Generate backup name
+        if not backup_name:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_name = f"backup_{os.path.basename(source_dir)}_{timestamp}"
+        
+        backup_path = os.path.join(backup_base, backup_name)
+        
+        try:
+            if self.config["backup_settings"]["compression"]:
+                # Create compressed backup
+                backup_path += ".zip"
+                with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for root, dirs, files in os.walk(source_dir):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arc_path = os.path.relpath(file_path, source_dir)
+                            zipf.write(file_path, arc_path)
+            else:
+                # Create uncompressed backup
+                shutil.copytree(source_dir, backup_path)
+            
+            backup_size = os.path.getsize(backup_path) if os.path.isfile(backup_path) else self.get_dir_size(backup_path)
+            
+            self.log_action("BACKUP", f"Created backup {backup_name}")
+            
+            return {
+                "backup_path": backup_path,
+                "backup_size": self.format_bytes(backup_size),
+                "message": f"Backup created successfully: {backup_name}"
+            }
+            
+        except Exception as e:
+            return {"error": f"Backup failed: {e}"}
+    
+    def schedule_cleanup(self, directory, schedule_time="02:00"):
+        """Schedule automatic cleanup"""
+        def run_cleanup():
+            result = self.cleanup_old_files(directory)
+            self.log_action("SCHEDULED_CLEANUP", f"Directory: {directory}, Result: {result}")
+        
+        schedule.every().day.at(schedule_time).do(run_cleanup)
+        
+        return {
+            "message": f"Cleanup scheduled for {directory} at {schedule_time} daily",
+            "directory": directory,
+            "time": schedule_time
+        }
+    
+    def get_directory_stats(self, directory):
+        """Get comprehensive directory statistics"""
+        if not os.path.exists(directory):
+            return {"error": f"Directory {directory} does not exist"}
+        
+        stats = {
+            "total_files": 0,
+            "total_size": 0,
+            "file_types": {},
+            "largest_files": [],
+            "oldest_files": [],
+            "newest_files": []
+        }
+        
+        file_info = []
+        
+        try:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    try:
+                        file_stat = os.stat(file_path)
+                        file_size = file_stat.st_size
+                        file_mtime = file_stat.st_mtime
+                        file_ext = os.path.splitext(file)[1].lower() or "no_extension"
+                        
+                        stats["total_files"] += 1
+                        stats["total_size"] += file_size
+                        
+                        # Count file types
+                        stats["file_types"][file_ext] = stats["file_types"].get(file_ext, 0) + 1
+                        
+                        # Collect file info for sorting
+                        file_info.append({
+                            "path": file_path,
+                            "name": file,
+                            "size": file_size,
+                            "modified": file_mtime
+                        })
+                        
+                    except (OSError, IOError):
+                        continue
+            
+            # Sort and get top files
+            file_info.sort(key=lambda x: x["size"], reverse=True)
+            stats["largest_files"] = [
+                {"name": f["name"], "size": self.format_bytes(f["size"])} 
+                for f in file_info[:5]
+            ]
+            
+            file_info.sort(key=lambda x: x["modified"])
+            stats["oldest_files"] = [
+                {"name": f["name"], "date": datetime.fromtimestamp(f["modified"]).strftime("%Y-%m-%d")} 
+                for f in file_info[:5]
+            ]
+            
+            file_info.sort(key=lambda x: x["modified"], reverse=True)
+            stats["newest_files"] = [
+                {"name": f["name"], "date": datetime.fromtimestamp(f["modified"]).strftime("%Y-%m-%d")} 
+                for f in file_info[:5]
+            ]
+            
+            stats["total_size_formatted"] = self.format_bytes(stats["total_size"])
+            
+            return stats
+            
+        except Exception as e:
+            return {"error": f"Stats generation failed: {e}"}
+    
+    def format_bytes(self, bytes_count):
+        """Format bytes to human readable format"""
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if bytes_count < 1024.0:
+                return f"{bytes_count:.2f} {unit}"
+            bytes_count /= 1024.0
+        return f"{bytes_count:.2f} PB"
+    
+    def get_dir_size(self, directory):
+        """Get total size of directory"""
+        total = 0
+        try:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    try:
+                        total += os.path.getsize(file_path)
+                    except (OSError, IOError):
+                        continue
+        except:
+            pass
+        return total
+
+# Demo usage
+def demo_file_management():
+    print("📁 File Management System Demo")
+    print("Automate file organization, backup, and cleanup")
+    print()
+    
+    fm = FileManagementSystem()
+    
+    # Demo directory stats
+    print("📊 Directory Analysis:")
+    print("• Total files: 1,234")
+    print("• Total size: 15.6 GB")
+    print("• File types: .jpg (45%), .pdf (23%), .mp3 (18%)")
+    print("• Largest file: presentation.pptx (234 MB)")
+    print("• 15 duplicate files found (saving 2.3 GB)")
+    
+    print("\\n🔧 Organization Rules:")
+    for rule_name, rule in fm.config["organization_rules"].items():
+        print(f"• {rule_name.title()}: {', '.join(rule['extensions'])} → {rule['folder']}")
+    
+    print("\\n🧹 Cleanup Rules:")
+    for rule_name, rule in fm.config["cleanup_rules"].items():
+        print(f"• {rule_name.replace('_', ' ').title()}: {', '.join(rule['extensions'])} older than {rule['days_old']} days")
+    
+    print("\\n✨ Features:")
+    print("• Automatic file organization by type")
+    print("• Duplicate file detection and removal")
+    print("• Scheduled cleanup of old files")
+    print("• Compressed backup creation")
+    print("• Directory statistics and analysis")
+    print("• Configurable rules and settings")
+    print("• Comprehensive logging")
+
+demo_file_management()`,
+    logic: [
+      "Create a configuration system that defines file organization rules based on extensions and target folders",
+      "Implement file hash comparison using MD5 to detect duplicate files across directories",
+      "Build automatic file organization that moves files to appropriate folders based on their extensions",
+      "Create cleanup system that removes old files based on age and file type rules",
+      "Implement backup functionality with compression options using zipfile library",
+      "Add scheduling capabilities for automatic cleanup and maintenance tasks",
+      "Provide comprehensive directory analysis with statistics on file types, sizes, and dates",
+    ],
+    inputs: [
+      { name: "directory", type: "text", label: "Directory to manage" },
+      {
+        name: "action",
+        type: "select",
+        options: ["organize", "cleanup", "backup", "stats"],
+        label: "Action to perform",
+      },
+    ],
+  },
+  {
+    id: "data-analysis-dashboard",
+    title: "Data Analysis Dashboard",
+    description:
+      "Analyze datasets with statistical insights, visualizations, and automated reporting",
+    category: "Data Science",
+    difficulty: "Advanced",
+    tags: ["data", "analytics", "visualization", "pandas"],
+    code: `import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime, timedelta
+import json
+import warnings
+warnings.filterwarnings('ignore')
+
+class DataAnalysisDashboard:
+    def __init__(self):
+        self.data = None
+        self.analysis_results = {}
+        self.reports = []
+        
+    def load_sample_data(self, dataset_type="sales"):
+        """Load sample datasets for analysis"""
+        np.random.seed(42)
+        
+        if dataset_type == "sales":
+            # Generate sample sales data
+            dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
+            n_records = len(dates) * 3  # 3 records per day average
+            
+            data = {
+                'date': np.random.choice(dates, n_records),
+                'product': np.random.choice(['Laptop', 'Phone', 'Tablet', 'Watch', 'Headphones'], n_records),
+                'category': np.random.choice(['Electronics', 'Accessories'], n_records),
+                'sales_amount': np.random.normal(500, 200, n_records).clip(min=50),
+                'quantity': np.random.poisson(2, n_records) + 1,
+                'customer_age': np.random.normal(35, 15, n_records).clip(min=18, max=80),
+                'region': np.random.choice(['North', 'South', 'East', 'West'], n_records)
+            }
+            
+        elif dataset_type == "customer":
+            # Generate sample customer behavior data
+            n_customers = 1000
+            data = {
+                'customer_id': range(1, n_customers + 1),
+                'age': np.random.normal(40, 15, n_customers).clip(min=18, max=80),
+                'income': np.random.normal(50000, 20000, n_customers).clip(min=20000),
+                'spending_score': np.random.randint(1, 101, n_customers),
+                'purchase_frequency': np.random.poisson(5, n_customers),
+                'loyalty_years': np.random.exponential(2, n_customers).clip(max=20),
+                'satisfaction': np.random.choice(['Low', 'Medium', 'High'], n_customers, p=[0.2, 0.5, 0.3])
+            }
+            
+        elif dataset_type == "website":
+            # Generate sample website analytics data
+            dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='H')
+            n_records = len(dates)
+            
+            data = {
+                'timestamp': dates,
+                'page_views': np.random.poisson(100, n_records),
+                'unique_visitors': np.random.poisson(80, n_records),
+                'bounce_rate': np.random.beta(2, 5, n_records),
+                'avg_session_duration': np.random.exponential(180, n_records),  # seconds
+                'conversion_rate': np.random.beta(1, 20, n_records),
+                'traffic_source': np.random.choice(['Organic', 'Paid', 'Social', 'Direct'], n_records)
+            }
+        
+        self.data = pd.DataFrame(data)
+        return self.data
+    
+    def basic_statistics(self):
+        """Generate basic statistical summary"""
+        if self.data is None:
+            return {"error": "No data loaded"}
+        
+        stats = {
+            "dataset_info": {
+                "rows": len(self.data),
+                "columns": len(self.data.columns),
+                "memory_usage": f"{self.data.memory_usage(deep=True).sum() / 1024:.2f} KB",
+                "null_values": self.data.isnull().sum().sum()
+            },
+            "numerical_summary": {},
+            "categorical_summary": {}
+        }
+        
+        # Numerical columns analysis
+        numerical_cols = self.data.select_dtypes(include=[np.number]).columns
+        for col in numerical_cols:
+            stats["numerical_summary"][col] = {
+                "mean": round(self.data[col].mean(), 2),
+                "median": round(self.data[col].median(), 2),
+                "std": round(self.data[col].std(), 2),
+                "min": round(self.data[col].min(), 2),
+                "max": round(self.data[col].max(), 2),
+                "quartiles": {
+                    "Q1": round(self.data[col].quantile(0.25), 2),
+                    "Q3": round(self.data[col].quantile(0.75), 2)
+                }
+            }
+        
+        # Categorical columns analysis
+        categorical_cols = self.data.select_dtypes(include=['object']).columns
+        for col in categorical_cols:
+            value_counts = self.data[col].value_counts()
+            stats["categorical_summary"][col] = {
+                "unique_values": len(value_counts),
+                "most_frequent": value_counts.index[0],
+                "frequency": int(value_counts.iloc[0]),
+                "distribution": dict(value_counts.head().to_dict())
+            }
+        
+        self.analysis_results["basic_stats"] = stats
+        return stats
+    
+    def correlation_analysis(self):
+        """Perform correlation analysis on numerical data"""
+        if self.data is None:
+            return {"error": "No data loaded"}
+        
+        numerical_data = self.data.select_dtypes(include=[np.number])
+        
+        if len(numerical_data.columns) < 2:
+            return {"error": "Need at least 2 numerical columns for correlation"}
+        
+        correlation_matrix = numerical_data.corr()
+        
+        # Find strong correlations
+        strong_correlations = []
+        for i in range(len(correlation_matrix.columns)):
+            for j in range(i+1, len(correlation_matrix.columns)):
+                corr_value = correlation_matrix.iloc[i, j]
+                if abs(corr_value) > 0.5:  # Strong correlation threshold
+                    strong_correlations.append({
+                        "variables": f"{correlation_matrix.columns[i]} vs {correlation_matrix.columns[j]}",
+                        "correlation": round(corr_value, 3),
+                        "strength": "Strong" if abs(corr_value) > 0.7 else "Moderate"
+                    })
+        
+        correlation_results = {
+            "correlation_matrix": correlation_matrix.round(3).to_dict(),
+            "strong_correlations": strong_correlations,
+            "interpretation": self._interpret_correlations(strong_correlations)
+        }
+        
+        self.analysis_results["correlation"] = correlation_results
+        return correlation_results
+    
+    def _interpret_correlations(self, correlations):
+        """Interpret correlation results"""
+        if not correlations:
+            return "No strong correlations found between variables."
+        
+        interpretations = []
+        for corr in correlations:
+            if corr["correlation"] > 0.7:
+                interpretations.append(f"Strong positive relationship: {corr['variables']}")
+            elif corr["correlation"] < -0.7:
+                interpretations.append(f"Strong negative relationship: {corr['variables']}")
+            elif corr["correlation"] > 0.5:
+                interpretations.append(f"Moderate positive relationship: {corr['variables']}")
+            else:
+                interpretations.append(f"Moderate negative relationship: {corr['variables']}")
+        
+        return interpretations
+    
+    def trend_analysis(self, date_column=None, value_column=None):
+        """Analyze trends over time"""
+        if self.data is None:
+            return {"error": "No data loaded"}
+        
+        # Auto-detect date and value columns if not provided
+        if date_column is None:
+            date_cols = self.data.select_dtypes(include=['datetime64']).columns
+            if len(date_cols) == 0:
+                return {"error": "No datetime column found"}
+            date_column = date_cols[0]
+        
+        if value_column is None:
+            numeric_cols = self.data.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) == 0:
+                return {"error": "No numerical column found"}
+            value_column = numeric_cols[0]
+        
+        # Group by date and calculate trends
+        if date_column in self.data.columns:
+            daily_data = self.data.groupby(pd.Grouper(key=date_column, freq='D'))[value_column].agg(['sum', 'mean', 'count']).reset_index()
+            
+            # Calculate trend indicators
+            recent_avg = daily_data[value_column + '_sum'].tail(30).mean()
+            overall_avg = daily_data[value_column + '_sum'].mean()
+            trend_direction = "Increasing" if recent_avg > overall_avg else "Decreasing"
+            
+            # Calculate growth rate
+            first_month = daily_data[value_column + '_sum'].head(30).mean()
+            last_month = daily_data[value_column + '_sum'].tail(30).mean()
+            growth_rate = ((last_month - first_month) / first_month) * 100 if first_month > 0 else 0
+            
+            trend_results = {
+                "trend_direction": trend_direction,
+                "growth_rate": round(growth_rate, 2),
+                "recent_30_days_avg": round(recent_avg, 2),
+                "overall_average": round(overall_avg, 2),
+                "peak_day": daily_data.loc[daily_data[value_column + '_sum'].idxmax(), date_column].strftime('%Y-%m-%d'),
+                "peak_value": round(daily_data[value_column + '_sum'].max(), 2)
+            }
+            
+            self.analysis_results["trend"] = trend_results
+            return trend_results
+        
+        return {"error": f"Column {date_column} not found"}
+    
+    def outlier_detection(self, column=None, method='iqr'):
+        """Detect outliers in numerical data"""
+        if self.data is None:
+            return {"error": "No data loaded"}
+        
+        numerical_cols = self.data.select_dtypes(include=[np.number]).columns
+        
+        if column and column not in numerical_cols:
+            return {"error": f"Column {column} is not numerical"}
+        
+        columns_to_analyze = [column] if column else numerical_cols[:3]  # Limit to first 3 for demo
+        outlier_results = {}
+        
+        for col in columns_to_analyze:
+            if method == 'iqr':
+                Q1 = self.data[col].quantile(0.25)
+                Q3 = self.data[col].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                
+                outliers = self.data[(self.data[col] < lower_bound) | (self.data[col] > upper_bound)]
+                
+            elif method == 'zscore':
+                z_scores = np.abs((self.data[col] - self.data[col].mean()) / self.data[col].std())
+                outliers = self.data[z_scores > 3]
+            
+            outlier_results[col] = {
+                "outlier_count": len(outliers),
+                "outlier_percentage": round((len(outliers) / len(self.data)) * 100, 2),
+                "outlier_values": outliers[col].tolist()[:10],  # Show first 10 outliers
+                "bounds": {
+                    "lower": round(lower_bound, 2) if method == 'iqr' else None,
+                    "upper": round(upper_bound, 2) if method == 'iqr' else None
+                }
+            }
+        
+        self.analysis_results["outliers"] = outlier_results
+        return outlier_results
+    
+    def generate_insights(self):
+        """Generate automated insights from analysis"""
+        if not self.analysis_results:
+            return {"error": "No analysis results available. Run analysis first."}
+        
+        insights = []
+        
+        # Dataset insights
+        if "basic_stats" in self.analysis_results:
+            stats = self.analysis_results["basic_stats"]
+            insights.append(f"Dataset contains {stats['dataset_info']['rows']:,} records with {stats['dataset_info']['columns']} variables")
+            
+            if stats['dataset_info']['null_values'] > 0:
+                insights.append(f"⚠️  Found {stats['dataset_info']['null_values']} missing values that may need attention")
+        
+        # Correlation insights
+        if "correlation" in self.analysis_results:
+            corr = self.analysis_results["correlation"]
+            if corr["strong_correlations"]:
+                insights.append(f"🔗 Discovered {len(corr['strong_correlations'])} strong relationships between variables")
+                for interp in corr["interpretation"][:2]:  # Show first 2
+                    insights.append(f"   • {interp}")
+        
+        # Trend insights
+        if "trend" in self.analysis_results:
+            trend = self.analysis_results["trend"]
+            insights.append(f"📈 Data shows {trend['trend_direction'].lower()} trend with {trend['growth_rate']}% growth rate")
+            insights.append(f"📊 Peak performance on {trend['peak_day']} with value of {trend['peak_value']}")
+        
+        # Outlier insights
+        if "outliers" in self.analysis_results:
+            outliers = self.analysis_results["outliers"]
+            total_outliers = sum(col_data["outlier_count"] for col_data in outliers.values())
+            if total_outliers > 0:
+                insights.append(f"🚨 Detected {total_outliers} outliers across analyzed variables")
+        
+        return {"insights": insights, "total_insights": len(insights)}
+    
+    def export_report(self, format="json"):
+        """Export analysis report"""
+        report = {
+            "report_metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "dataset_shape": f"{len(self.data)} rows × {len(self.data.columns)} columns" if self.data is not None else "No data",
+                "analysis_modules": list(self.analysis_results.keys())
+            },
+            "analysis_results": self.analysis_results,
+            "insights": self.generate_insights()
+        }
+        
+        if format == "json":
+            return json.dumps(report, indent=2, default=str)
+        elif format == "summary":
+            return self._create_summary_report(report)
+        
+        return report
+    
+    def _create_summary_report(self, report):
+        """Create a human-readable summary report"""
+        summary = f"""
+📊 DATA ANALYSIS REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{'='*50}
+
+📈 DATASET OVERVIEW:
+{report['report_metadata']['dataset_shape']}
+Analysis modules: {', '.join(report['report_metadata']['analysis_modules'])}
+
+🔍 KEY INSIGHTS:
+"""
+        if 'insights' in report and report['insights']['insights']:
+            for insight in report['insights']['insights']:
+                summary += f"• {insight}\n"
+        else:
+            summary += "• No insights generated yet\n"
+        
+        summary += f"""
+📋 ANALYSIS SUMMARY:
+• Basic Statistics: {'✅' if 'basic_stats' in self.analysis_results else '❌'}
+• Correlation Analysis: {'✅' if 'correlation' in self.analysis_results else '❌'}
+• Trend Analysis: {'✅' if 'trend' in self.analysis_results else '❌'}
+• Outlier Detection: {'✅' if 'outliers' in self.analysis_results else '❌'}
+
+💡 RECOMMENDATIONS:
+• Review outliers for data quality issues
+• Investigate strong correlations for business insights
+• Monitor trend changes for strategic planning
+• Consider advanced analysis for deeper insights
+"""
+        return summary
+
+# Demo usage
+def demo_data_analysis():
+    print("📊 Data Analysis Dashboard Demo")
+    print("Comprehensive data analysis with automated insights")
+    print()
+    
+    dashboard = DataAnalysisDashboard()
+    
+    # Load sample sales data
+    print("📁 Loading sample sales data...")
+    data = dashboard.load_sample_data("sales")
+    print(f"✅ Loaded {len(data)} records with {len(data.columns)} columns")
+    
+    # Basic statistics
+    print("\\n📈 Generating basic statistics...")
+    stats = dashboard.basic_statistics()
+    print(f"✅ Analyzed {stats['dataset_info']['columns']} variables")
+    
+    # Correlation analysis
+    print("\\n🔗 Performing correlation analysis...")
+    corr = dashboard.correlation_analysis()
+    print(f"✅ Found {len(corr['strong_correlations'])} strong correlations")
+    
+    # Trend analysis
+    print("\\n📊 Analyzing trends...")
+    trends = dashboard.trend_analysis('date', 'sales_amount')
+    print(f"✅ Trend direction: {trends['trend_direction']}")
+    
+    # Generate insights
+    print("\\n💡 Generating insights...")
+    insights = dashboard.generate_insights()
+    print(f"✅ Generated {insights['total_insights']} insights")
+    
+    # Export report
+    print("\\n📋 Creating summary report...")
+    report = dashboard.export_report("summary")
+    print("✅ Report generated successfully")
+    
+    print("\\n" + "="*50)
+    print("🎯 DASHBOARD FEATURES:")
+    print("• Multi-dataset support (sales, customer, website)")
+    print("• Automated statistical analysis")
+    print("• Correlation and relationship detection")
+    print("• Time series trend analysis")
+    print("• Outlier detection with multiple methods")
+    print("• Automated insight generation")
+    print("• Exportable reports (JSON, Summary)")
+    print("• Data visualization ready")
+
+demo_data_analysis()`,
+    logic: [
+      "Create a comprehensive data analysis system that can handle multiple dataset types (sales, customer, website analytics)",
+      "Implement basic statistical analysis including mean, median, standard deviation, and quartile calculations for numerical data",
+      "Build correlation analysis to identify relationships between variables using Pearson correlation coefficients",
+      "Develop trend analysis capabilities for time-series data with growth rate calculations and peak detection",
+      "Implement outlier detection using IQR and Z-score methods to identify anomalous data points",
+      "Create an automated insight generation system that interprets analysis results and provides business recommendations",
+      "Build export functionality that can generate reports in multiple formats (JSON, human-readable summary)",
+    ],
+    inputs: [
+      {
+        name: "dataset_type",
+        type: "select",
+        options: ["sales", "customer", "website"],
+        label: "Dataset type",
+      },
+      {
+        name: "analysis_type",
+        type: "select",
+        options: ["basic", "correlation", "trend", "outliers"],
+        label: "Analysis type",
+      },
+    ],
+  },
+  {
+    id: "social-media-bot",
+    title: "Social Media Automation Bot",
+    description:
+      "Automate social media posting, engagement tracking, and content scheduling across platforms",
+    category: "Social Media Automation",
+    difficulty: "Advanced",
+    tags: ["automation", "social", "api", "scheduling"],
+    code: `import requests
+import json
+from datetime import datetime, timedelta
+import schedule
+import time
+import hashlib
+import random
+from urllib.parse import urlencode
+
+class SocialMediaBot:
+    def __init__(self):
+        self.platforms = {
+            'twitter': {'api_key': '', 'api_secret': '', 'access_token': '', 'access_secret': ''},
+            'instagram': {'access_token': '', 'user_id': ''},
+            'linkedin': {'access_token': ''},
+            'facebook': {'access_token': '', 'page_id': ''}
+        }
+        self.post_queue = []
+        self.analytics_data = {}
+        self.content_templates = self.load_content_templates()
+        
+    def load_content_templates(self):
+        """Load predefined content templates"""
+        return {
+            'motivational': [
+                "🌟 {quote} - Start your {day} with determination!",
+                "💪 Remember: {message}. You've got this!",
+                "✨ {inspiration}. Make today count! #Motivation"
+            ],
+            'educational': [
+                "📚 Did you know? {fact}",
+                "💡 Tech Tip: {tip} #TechTips #Learning",
+                "🔍 Quick insight: {insight} #Education"
+            ],
+            'promotional': [
+                "🚀 Check out our latest: {product}! {benefit} #NewProduct",
+                "🎉 Special offer: {offer}. Limited time! #Sale",
+                "✨ Introducing {feature}: {description} #Innovation"
+            ],
+            'engagement': [
+                "❓ Question for you: {question} Let us know in the comments!",
+                "🤔 What's your take on {topic}? Share your thoughts!",
+                "📊 Poll time: {poll_question} A) {option_a} B) {option_b}"
+            ],
+            'news': [
+                "📰 Industry Update: {headline} {summary} #News",
+                "🔥 Trending: {trend} What do you think? #Trending",
+                "📈 Market Insight: {insight} #MarketNews"
+            ]
+        }
+    
+    def create_post(self, content, platform, media_urls=None, scheduled_time=None):
+        """Create a new social media post"""
+        post = {
+            'id': hashlib.md5(f"{content}{platform}{datetime.now()}".encode()).hexdigest()[:8],
+            'content': content,
+            'platform': platform,
+            'media_urls': media_urls or [],
+            'scheduled_time': scheduled_time or datetime.now(),
+            'status': 'draft',
+            'created_at': datetime.now(),
+            'engagement': {'likes': 0, 'shares': 0, 'comments': 0},
+            'hashtags': self.extract_hashtags(content),
+            'mentions': self.extract_mentions(content)
+        }
+        
+        self.post_queue.append(post)
+        return post
+    
+    def extract_hashtags(self, content):
+        """Extract hashtags from content"""
+        import re
+        return re.findall(r'#\\w+', content)
+    
+    def extract_mentions(self, content):
+        """Extract mentions from content"""
+        import re
+        return re.findall(r'@\\w+', content)
+    
+    def generate_content(self, template_type, **kwargs):
+        """Generate content using templates"""
+        if template_type not in self.content_templates:
+            return "Template type not found"
+        
+        templates = self.content_templates[template_type]
+        template = random.choice(templates)
+        
+        # Default values for common placeholders
+        defaults = {
+            'day': datetime.now().strftime('%A'),
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'quote': 'Success is not final, failure is not fatal: it is the courage to continue that counts.',
+            'message': 'Every expert was once a beginner',
+            'inspiration': 'Great things never come from comfort zones',
+            'fact': 'Python was named after Monty Python\\'s Flying Circus',
+            'tip': 'Use virtual environments for Python projects',
+            'insight': 'Automation saves time and reduces errors',
+            'product': 'our new automation tool',
+            'benefit': 'Save 5 hours per week',
+            'offer': '20% off all services',
+            'feature': 'Smart Scheduling',
+            'description': 'AI-powered content optimization',
+            'question': 'What\\'s your biggest productivity challenge?',
+            'topic': 'remote work productivity',
+            'poll_question': 'What\\'s your preferred programming language?',
+            'option_a': 'Python',
+            'option_b': 'JavaScript',
+            'headline': 'AI adoption increases 40% in 2024',
+            'summary': 'Companies are investing heavily in automation',
+            'trend': 'Automation tools are becoming mainstream',
+            'insight': 'Data-driven decisions lead to 23% higher profits'
+        }
+        
+        # Merge with provided kwargs
+        defaults.update(kwargs)
+        
+        try:
+            return template.format(**defaults)
+        except KeyError as e:
+            return f"Missing template variable: {e}"
+    
+    def schedule_post(self, post_id, scheduled_time):
+        """Schedule a post for future publishing"""
+        for post in self.post_queue:
+            if post['id'] == post_id:
+                post['scheduled_time'] = scheduled_time
+                post['status'] = 'scheduled'
+                return {"success": True, "message": f"Post scheduled for {scheduled_time}"}
+        
+        return {"error": "Post not found"}
+    
+    def publish_post(self, post_id, platform_override=None):
+        """Publish a post to social media platform"""
+        post = None
+        for p in self.post_queue:
+            if p['id'] == post_id:
+                post = p
+                break
+        
+        if not post:
+            return {"error": "Post not found"}
+        
+        platform = platform_override or post['platform']
+        
+        # Simulate API call to social media platform
+        if platform == 'twitter':
+            result = self._publish_to_twitter(post)
+        elif platform == 'instagram':
+            result = self._publish_to_instagram(post)
+        elif platform == 'linkedin':
+            result = self._publish_to_linkedin(post)
+        elif platform == 'facebook':
+            result = self._publish_to_facebook(post)
+        else:
+            return {"error": f"Platform {platform} not supported"}
+        
+        if result.get('success'):
+            post['status'] = 'published'
+            post['published_at'] = datetime.now()
+            post['platform_id'] = result.get('platform_id')
+        
+        return result
+    
+    def _publish_to_twitter(self, post):
+        """Simulate Twitter API publishing"""
+        # In real implementation, use tweepy or requests to Twitter API
+        return {
+            "success": True,
+            "platform_id": f"tw_{random.randint(1000000, 9999999)}",
+            "message": "Posted to Twitter successfully",
+            "url": f"https://twitter.com/user/status/{random.randint(1000000000000000000, 9999999999999999999)}"
+        }
+    
+    def _publish_to_instagram(self, post):
+        """Simulate Instagram API publishing"""
+        return {
+            "success": True,
+            "platform_id": f"ig_{random.randint(1000000, 9999999)}",
+            "message": "Posted to Instagram successfully",
+            "url": f"https://instagram.com/p/{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.randint(100000, 999999)}"
+        }
+    
+    def _publish_to_linkedin(self, post):
+        """Simulate LinkedIn API publishing"""
+        return {
+            "success": True,
+            "platform_id": f"li_{random.randint(1000000, 9999999)}",
+            "message": "Posted to LinkedIn successfully",
+            "url": f"https://linkedin.com/posts/activity-{random.randint(1000000000000000000, 9999999999999999999)}"
+        }
+    
+    def _publish_to_facebook(self, post):
+        """Simulate Facebook API publishing"""
+        return {
+            "success": True,
+            "platform_id": f"fb_{random.randint(1000000, 9999999)}",
+            "message": "Posted to Facebook successfully", 
+            "url": f"https://facebook.com/{random.randint(1000000, 9999999)}"
+        }
+    
+    def bulk_schedule(self, posts_data, start_time, interval_hours=2):
+        """Schedule multiple posts with time intervals"""
+        scheduled_posts = []
+        current_time = start_time
+        
+        for i, post_data in enumerate(posts_data):
+            content = self.generate_content(
+                post_data.get('template_type', 'motivational'),
+                **post_data.get('variables', {})
+            )
+            
+            post = self.create_post(
+                content=content,
+                platform=post_data.get('platform', 'twitter'),
+                scheduled_time=current_time
+            )
+            
+            self.schedule_post(post['id'], current_time)
+            scheduled_posts.append(post)
+            
+            # Add interval for next post
+            current_time += timedelta(hours=interval_hours)
+        
+        return {
+            "scheduled_count": len(scheduled_posts),
+            "posts": scheduled_posts,
+            "time_range": f"{start_time} to {current_time - timedelta(hours=interval_hours)}"
+        }
+    
+    def get_analytics(self, platform=None, days_back=7):
+        """Get social media analytics"""
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        
+        # Filter posts by platform and date range
+        relevant_posts = []
+        for post in self.post_queue:
+            if post['status'] == 'published':
+                if platform is None or post['platform'] == platform:
+                    if start_date <= post.get('published_at', datetime.now()) <= end_date:
+                        relevant_posts.append(post)
+        
+        if not relevant_posts:
+            return {"message": "No published posts found for the specified criteria"}
+        
+        # Calculate analytics
+        total_posts = len(relevant_posts)
+        total_likes = sum(post['engagement']['likes'] for post in relevant_posts)
+        total_shares = sum(post['engagement']['shares'] for post in relevant_posts)
+        total_comments = sum(post['engagement']['comments'] for post in relevant_posts)
+        
+        # Simulate engagement data
+        for post in relevant_posts:
+            post['engagement']['likes'] = random.randint(5, 100)
+            post['engagement']['shares'] = random.randint(1, 25)
+            post['engagement']['comments'] = random.randint(0, 15)
+        
+        total_likes = sum(post['engagement']['likes'] for post in relevant_posts)
+        total_shares = sum(post['engagement']['shares'] for post in relevant_posts)
+        total_comments = sum(post['engagement']['comments'] for post in relevant_posts)
+        
+        analytics = {
+            "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+            "platform": platform or "All platforms",
+            "summary": {
+                "total_posts": total_posts,
+                "total_engagement": total_likes + total_shares + total_comments,
+                "average_engagement_per_post": round((total_likes + total_shares + total_comments) / total_posts, 2) if total_posts > 0 else 0
+            },
+            "engagement_breakdown": {
+                "likes": total_likes,
+                "shares": total_shares,
+                "comments": total_comments
+            },
+            "best_performing_post": max(relevant_posts, key=lambda x: sum(x['engagement'].values())) if relevant_posts else None,
+            "posting_frequency": round(total_posts / days_back, 2),
+            "engagement_rate": round(((total_likes + total_shares + total_comments) / (total_posts * 100)) * 100, 2) if total_posts > 0 else 0
+        }
+        
+        return analytics
+    
+    def optimize_posting_times(self, platform='twitter'):
+        """Suggest optimal posting times based on engagement data"""
+        # Simulate analysis of historical engagement data
+        optimal_times = {
+            'twitter': {
+                'weekdays': ['09:00', '12:00', '17:00'],
+                'weekends': ['10:00', '14:00', '19:00'],
+                'best_day': 'Tuesday',
+                'worst_day': 'Sunday'
+            },
+            'instagram': {
+                'weekdays': ['11:00', '14:00', '20:00'],
+                'weekends': ['12:00', '16:00', '21:00'],
+                'best_day': 'Wednesday',
+                'worst_day': 'Monday'
+            },
+            'linkedin': {
+                'weekdays': ['08:00', '12:00', '18:00'],
+                'weekends': ['10:00', '15:00'],
+                'best_day': 'Thursday',
+                'worst_day': 'Saturday'
+            },
+            'facebook': {
+                'weekdays': ['09:00', '13:00', '19:00'],
+                'weekends': ['11:00', '15:00', '20:00'],
+                'best_day': 'Friday',
+                'worst_day': 'Sunday'
+            }
+        }
+        
+        if platform not in optimal_times:
+            return {"error": f"Optimization data not available for {platform}"}
+        
+        times = optimal_times[platform]
+        return {
+            "platform": platform,
+            "recommendations": {
+                "best_times_weekdays": times['weekdays'],
+                "best_times_weekends": times['weekends'],
+                "best_day_of_week": times['best_day'],
+                "day_to_avoid": times['worst_day']
+            },
+            "tips": [
+                f"Post during {', '.join(times['weekdays'])} on weekdays for maximum engagement",
+                f"{times['best_day']} shows highest engagement rates",
+                f"Avoid posting on {times['worst_day']} unless urgent",
+                "Consistency is key - maintain regular posting schedule"
+            ]
+        }
+    
+    def content_performance_analysis(self):
+        """Analyze which content types perform best"""
+        published_posts = [post for post in self.post_queue if post['status'] == 'published']
+        
+        if not published_posts:
+            return {"message": "No published posts to analyze"}
+        
+        # Categorize posts by hashtags/content type
+        performance_by_type = {}
+        
+        for post in published_posts:
+            # Simulate engagement data
+            post['engagement']['likes'] = random.randint(5, 100)
+            post['engagement']['shares'] = random.randint(1, 25)
+            post['engagement']['comments'] = random.randint(0, 15)
+            
+            total_engagement = sum(post['engagement'].values())
+            
+            # Determine content type based on hashtags or content
+            content_type = 'general'
+            if any(tag in post['content'].lower() for tag in ['#motivation', 'motivation']):
+                content_type = 'motivational'
+            elif any(tag in post['content'].lower() for tag in ['#techtips', '#learning', 'tip']):
+                content_type = 'educational'
+            elif any(tag in post['content'].lower() for tag in ['#sale', '#offer', 'check out']):
+                content_type = 'promotional'
+            elif any(tag in post['content'].lower() for tag in ['question', '?', 'poll']):
+                content_type = 'engagement'
+            
+            if content_type not in performance_by_type:
+                performance_by_type[content_type] = {
+                    'posts': 0,
+                    'total_engagement': 0,
+                    'avg_engagement': 0
+                }
+            
+            performance_by_type[content_type]['posts'] += 1
+            performance_by_type[content_type]['total_engagement'] += total_engagement
+        
+        # Calculate averages
+        for content_type in performance_by_type:
+            data = performance_by_type[content_type]
+            data['avg_engagement'] = round(data['total_engagement'] / data['posts'], 2)
+        
+        # Sort by performance
+        sorted_performance = sorted(
+            performance_by_type.items(),
+            key=lambda x: x[1]['avg_engagement'],
+            reverse=True
+        )
+        
+        return {
+            "analysis_period": f"Based on {len(published_posts)} published posts",
+            "performance_ranking": [
+                {
+                    "content_type": content_type,
+                    "avg_engagement": data['avg_engagement'],
+                    "total_posts": data['posts'],
+                    "performance_level": "High" if data['avg_engagement'] > 50 else "Medium" if data['avg_engagement'] > 25 else "Low"
+                }
+                for content_type, data in sorted_performance
+            ],
+            "recommendations": [
+                f"Focus more on {sorted_performance[0][0]} content (highest engagement)",
+                "Test different content formats to improve performance",
+                "Consider reducing low-performing content types",
+                "A/B test posting times for different content types"
+            ]
+        }
+    
+    def generate_weekly_report(self):
+        """Generate comprehensive weekly social media report"""
+        analytics = self.get_analytics(days_back=7)
+        performance = self.content_performance_analysis()
+        
+        report = {
+            "report_period": "Last 7 days",
+            "generated_at": datetime.now().isoformat(),
+            "summary": analytics.get('summary', {}),
+            "top_insights": [
+                f"Published {analytics.get('summary', {}).get('total_posts', 0)} posts across all platforms",
+                f"Generated {analytics.get('summary', {}).get('total_engagement', 0)} total engagements",
+                f"Average engagement rate: {analytics.get('engagement_rate', 0)}%"
+            ],
+            "performance_analysis": performance,
+            "upcoming_scheduled": len([p for p in self.post_queue if p['status'] == 'scheduled']),
+            "action_items": [
+                "Review and optimize underperforming content",
+                "Schedule posts for optimal engagement times",
+                "Prepare content for next week",
+                "Engage with community comments and mentions"
+            ]
+        }
+        
+        return report
+
+# Demo usage
+def demo_social_media_bot():
+    print("🤖 Social Media Automation Bot Demo")
+    print("Automate posting, scheduling, and analytics across platforms")
+    print()
+    
+    bot = SocialMediaBot()
+    
+    # Generate some content
+    print("📝 Generating content...")
+    motivational_content = bot.generate_content('motivational', quote="The best time to plant a tree was 20 years ago. The second best time is now.")
+    educational_content = bot.generate_content('educational', tip="Use list comprehensions for more Pythonic code")
+    
+    print(f"✅ Generated motivational post: {motivational_content[:50]}...")
+    print(f"✅ Generated educational post: {educational_content[:50]}...")
+    
+    # Create posts
+    print("\\n📋 Creating posts...")
+    post1 = bot.create_post(motivational_content, 'twitter')
+    post2 = bot.create_post(educational_content, 'linkedin')
+    
+    print(f"✅ Created {len(bot.post_queue)} posts")
+    
+    # Schedule bulk posts
+    print("\\n⏰ Scheduling bulk posts...")
+    bulk_data = [
+        {'template_type': 'motivational', 'platform': 'twitter'},
+        {'template_type': 'educational', 'platform': 'linkedin'},
+        {'template_type': 'engagement', 'platform': 'instagram'}
+    ]
+    
+    start_time = datetime.now() + timedelta(hours=1)
+    bulk_result = bot.bulk_schedule(bulk_data, start_time)
+    print(f"✅ Scheduled {bulk_result['scheduled_count']} posts")
+    
+    # Simulate publishing
+    print("\\n🚀 Publishing posts...")
+    for post in bot.post_queue[:2]:  # Publish first 2 posts
+        result = bot.publish_post(post['id'])
+        print(f"✅ {result.get('message', 'Published successfully')}")
+    
+    # Get analytics
+    print("\\n📊 Generating analytics...")
+    analytics = bot.get_analytics()
+    print(f"✅ Analytics generated for {analytics.get('summary', {}).get('total_posts', 0)} posts")
+    
+    # Get optimization suggestions
+    print("\\n⚡ Getting optimization suggestions...")
+    optimization = bot.optimize_posting_times('twitter')
+    print(f"✅ Best times for Twitter: {', '.join(optimization['recommendations']['best_times_weekdays'])}")
+    
+    print("\\n" + "="*60)
+    print("🎯 BOT FEATURES:")
+    print("• Multi-platform support (Twitter, Instagram, LinkedIn, Facebook)")
+    print("• Content generation with customizable templates")
+    print("• Bulk scheduling with automated intervals")
+    print("• Real-time analytics and engagement tracking")
+    print("• Performance optimization suggestions")
+    print("• Content type performance analysis")
+    print("• Automated weekly reporting")
+    print("• Hashtag and mention extraction")
+
+demo_social_media_bot()`,
+    logic: [
+      "Create a multi-platform social media management system supporting Twitter, Instagram, LinkedIn, and Facebook",
+      "Implement a template-based content generation system with customizable variables and random selection",
+      "Build a comprehensive scheduling system that can handle individual posts and bulk scheduling with time intervals",
+      "Develop analytics tracking for engagement metrics (likes, shares, comments) with performance analysis",
+      "Create optimization algorithms that suggest best posting times based on platform-specific engagement patterns",
+      "Implement content performance analysis to identify which types of posts generate the most engagement",
+      "Build automated reporting functionality that generates weekly summaries with actionable insights",
+    ],
+    inputs: [
+      {
+        name: "platform",
+        type: "select",
+        options: ["twitter", "instagram", "linkedin", "facebook"],
+        label: "Social media platform",
+      },
+      {
+        name: "content_type",
+        type: "select",
+        options: ["motivational", "educational", "promotional", "engagement"],
+        label: "Content type",
+      },
+      {
+        name: "custom_message",
+        type: "text",
+        label: "Custom message (optional)",
+      },
+    ],
+  },
 ];

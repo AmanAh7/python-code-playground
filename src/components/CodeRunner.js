@@ -493,7 +493,8 @@ export default function CodeRunner({ project }) {
 
               result = `Finding GCD of ${num1Gcd} and ${num2Gcd} using Euclidean Algorithm:\n\n`;
               result += "The algorithm: GCD(a,b) = GCD(b, a mod b)\n";
-              result += "=" * 50 + "\n\n";
+              result +=
+                "==================================================\n\n";
 
               let step = 1;
 
@@ -1182,7 +1183,7 @@ export default function CodeRunner({ project }) {
             result += `📊 Results: ${filteredQuotes.length} quotes found\n\n`;
 
             result += `Sample Quotes:\n`;
-            result += "=" * 50 + "\n";
+            result += "==================================================\n";
 
             filteredQuotes.slice(0, 3).forEach((quote, i) => {
               result += `\n${i + 1}. "${quote.text}"\n`;
@@ -1199,6 +1200,350 @@ export default function CodeRunner({ project }) {
             result += `• Export to JSON/CSV\n`;
             result += `• Respectful scraping\n`;
             result += `• Error handling`;
+            break;
+
+          // NEW ADVANCED PROJECT IMPLEMENTATIONS
+          case "email-automation":
+            const recipient = inputs.recipient || "user@example.com";
+            const subject = inputs.subject || "Test Email";
+            const body =
+              inputs.body || "This is a test email from our automation tool!";
+            const template = inputs.template || "welcome";
+
+            result = "📧 Email Automation Demo\n\n";
+            result += "📨 Recipient: " + recipient + "\n";
+            result += "📋 Subject: " + subject + "\n";
+            result += "📝 Template: " + template + "\n\n";
+
+            if (template === "welcome") {
+              result += "📤 Welcome Email Content:\n";
+              result +=
+                '"Dear User,\n\nWelcome to our platform! We\'re excited to have you on board.\n\nBest regards,\nThe Team"\n\n';
+            } else if (template === "reminder") {
+              result += "📤 Reminder Email Content:\n";
+              result +=
+                '"Hi there,\n\nThis is a friendly reminder about your upcoming event.\n\nThank you!"\n\n';
+            } else if (template === "newsletter") {
+              result += "📤 Newsletter Email Content:\n";
+              result +=
+                "\"Dear Subscriber,\n\nHere's what's new this month:\n• New features released\n• Bug fixes and improvements\n\nStay tuned!\"\n\n";
+            }
+
+            result += "✅ Email would be sent via SMTP (Gmail)\n";
+            result += "📊 Status: Ready to send\n";
+            result += "🕐 Timestamp: " + new Date().toLocaleString() + "\n\n";
+            result += "✨ Features:\n";
+            result += "• SMTP email sending with SSL/TLS\n";
+            result += "• Template system with variables\n";
+            result += "• Bulk email support with personalization\n";
+            result += "• File attachments (PDF, images, etc.)\n";
+            result += "• Email scheduling and automation\n";
+            result += "• Newsletter automation\n";
+            result += "• Delivery tracking and error handling\n\n";
+            result += "💡 Setup Requirements:\n";
+            result += "1. Gmail account with App Password\n";
+            result += "2. Install: pip install schedule\n";
+            result += "3. Configure SMTP settings\n";
+            result += "4. Create email templates JSON file";
+            break;
+
+          case "file-management-system":
+            const directory = inputs.directory || "/home/user/Documents";
+            const action = inputs.action || "organize";
+
+            result = "📁 File Management System Demo\n\n";
+            result += "📂 Directory: " + directory + "\n";
+            result +=
+              "⚡ Action: " +
+              action.charAt(0).toUpperCase() +
+              action.slice(1) +
+              "\n\n";
+
+            if (action === "organize") {
+              result += "🔄 Organizing files by type...\n\n";
+              result += "📸 Images: .jpg, .jpeg, .png, .gif → Images/\n";
+              result += "  ✅ Moved photo001.jpg to Images/\n";
+              result += "  ✅ Moved screenshot.png to Images/\n";
+              result += "  ✅ Moved 13 more image files...\n\n";
+              result += "📄 Documents: .pdf, .doc, .docx, .txt → Documents/\n";
+              result += "  ✅ Moved report.pdf to Documents/\n";
+              result += "  ✅ Moved notes.txt to Documents/\n";
+              result += "  ✅ Moved 6 more document files...\n\n";
+              result += "🎵 Music: .mp3, .wav, .flac → Music/\n";
+              result += "  ✅ Moved song.mp3 to Music/\n";
+              result += "  ✅ Moved 2 more music files...\n\n";
+              result += "📊 Organization Summary:\n";
+              result += "• Total files processed: 26\n";
+              result += "• Files organized: 24\n";
+              result += "• Errors: 0\n";
+              result += "• Time taken: 2.3 seconds";
+            } else if (action === "cleanup") {
+              result += "🧹 Cleaning up old files...\n\n";
+              result += "🗑️ Temp Files (older than 7 days):\n";
+              result += "  ✅ Removed temp_file_001.tmp (45 days old)\n";
+              result += "  ✅ Removed cache_data.cache (12 days old)\n";
+              result += "  ✅ Removed 10 more temp files...\n\n";
+              result += "📋 Log Files (older than 30 days):\n";
+              result += "  ✅ Removed system.log (67 days old, 45 MB)\n";
+              result += "  ✅ Removed error.log (41 days old, 12 MB)\n";
+              result += "  ✅ Removed 3 more log files...\n\n";
+              result += "📊 Cleanup Summary:\n";
+              result += "• Files removed: 17\n";
+              result += "• Space freed: 234.5 MB\n";
+              result += "• Errors: 0\n";
+              result += "• Oldest file removed: 67 days old";
+            } else if (action === "backup") {
+              result += "💾 Creating compressed backup...\n\n";
+              result += "📦 Backup Details:\n";
+              result += "• Source: " + directory + "\n";
+              result +=
+                "• Backup name: backup_Documents_" +
+                new Date().toISOString().slice(0, 10) +
+                ".zip\n";
+              result += "• Compression: ZIP_DEFLATED\n\n";
+              result += "🔄 Backup Progress:\n";
+              result += "  ✅ Scanning directory structure...\n";
+              result += "  ✅ Found 1,234 files to backup\n";
+              result += "  ✅ Compressing files... (87% compression ratio)\n";
+              result += "  ✅ Backup created successfully!\n\n";
+              result += "📊 Backup Summary:\n";
+              result += "• Original size: 15.6 GB\n";
+              result += "• Compressed size: 2.1 GB\n";
+              result += "• Files backed up: 1,234\n";
+              result += "• Time taken: 8.3 minutes\n";
+              result +=
+                "• Location: ./backups/backup_Documents_" +
+                new Date().toISOString().slice(0, 10) +
+                ".zip";
+            } else if (action === "stats") {
+              result += "📊 Directory Analysis Results\n\n";
+              result += "📁 Basic Statistics:\n";
+              result += "• Total files: 1,234\n";
+              result += "• Total directories: 87\n";
+              result += "• Total size: 15.6 GB\n";
+              result += "• Average file size: 12.9 MB\n\n";
+              result += "📈 File Type Distribution:\n";
+              result += "• Images (.jpg, .png): 556 files (45.1%) - 8.2 GB\n";
+              result +=
+                "• Documents (.pdf, .docx): 284 files (23.0%) - 4.1 GB\n";
+              result += "• Music (.mp3, .flac): 221 files (17.9%) - 2.8 GB\n";
+              result += "• Videos (.mp4, .avi): 89 files (7.2%) - 0.4 GB\n";
+              result += "• Other: 84 files (6.8%) - 0.1 GB\n\n";
+              result += "🔍 Duplicate Analysis:\n";
+              result += "• Duplicate files found: 15\n";
+              result += "• Space wasted by duplicates: 2.3 GB\n";
+              result += "• Potential savings: 14.7%\n\n";
+              result += "📅 File Age Distribution:\n";
+              result += "• Last 30 days: 234 files\n";
+              result += "• Last 6 months: 567 files\n";
+              result += "• Older than 1 year: 433 files\n\n";
+              result += "🏆 Top 5 Largest Files:\n";
+              result += "1. movie_backup.mkv (1.2 GB)\n";
+              result += "2. project_archive.zip (890 MB)\n";
+              result += "3. presentation.pptx (234 MB)\n";
+              result += "4. photo_album.zip (198 MB)\n";
+              result += "5. database_dump.sql (167 MB)";
+            }
+
+            result += "\n\n✨ Advanced Features:\n";
+            result += "• Smart file organization by type\n";
+            result += "• Content-based duplicate detection\n";
+            result += "• Scheduled automatic cleanup\n";
+            result += "• Compressed backup with retention\n";
+            result += "• Comprehensive directory analytics\n";
+            result += "• Configurable rules and filters\n";
+            result += "• Detailed logging and reporting\n";
+            result += "• Cross-platform compatibility\n\n";
+            result += "📋 Configuration:\n";
+            result += "• Organization rules: 6 categories\n";
+            result += "• Cleanup rules: 3 file types\n";
+            result += "• Backup retention: 90 days\n";
+            result += "• Scheduled runs: Daily at 2:00 AM";
+            break;
+          case "data-analysis-dashboard":
+            const datasetType = inputs.dataset_type || "sales";
+            const analysisType = inputs.analysis_type || "basic";
+
+            result = "📊 Data Analysis Dashboard Demo\\n\\n";
+            result +=
+              "📁 Dataset: " +
+              datasetType.charAt(0).toUpperCase() +
+              datasetType.slice(1) +
+              " Data\\n";
+            result +=
+              "🔍 Analysis: " +
+              analysisType.charAt(0).toUpperCase() +
+              analysisType.slice(1) +
+              " Analysis\\n\\n";
+
+            if (analysisType === "basic") {
+              result += "📈 Basic Statistics Generated:\\n";
+              result += "• Dataset: 1,095 records × 7 columns\\n";
+              result += "• Memory usage: 234.56 KB\\n";
+              result += "• Null values: 0\\n\\n";
+              result += "📊 Numerical Summary:\\n";
+              result += "• Sales Amount: Mean $523.45, Std $198.23\\n";
+              result += "• Quantity: Mean 2.3, Median 2.0\\n";
+              result += "• Customer Age: Mean 35.2, Range 18-80\\n\\n";
+              result += "📂 Categorical Summary:\\n";
+              result +=
+                "• Products: 5 unique (Laptop most frequent: 234 times)\\n";
+              result += "• Regions: 4 unique (North: 28.3% distribution)\\n";
+            } else if (analysisType === "correlation") {
+              result += "🔗 Correlation Analysis Results:\\n";
+              result +=
+                "• Strong positive correlation: Sales Amount vs Quantity (0.734)\\n";
+              result +=
+                "• Moderate correlation: Customer Age vs Sales Amount (0.521)\\n";
+              result +=
+                "• Weak correlation: Region vs Purchase Frequency (0.234)\\n\\n";
+              result += "💡 Interpretation:\\n";
+              result += "• Higher quantities lead to higher sales amounts\\n";
+              result += "• Older customers tend to spend more\\n";
+              result += "• Regional differences have minimal impact\\n";
+            } else if (analysisType === "trend") {
+              result += "📈 Trend Analysis Results:\\n";
+              result += "• Trend Direction: Increasing (12.3% growth rate)\\n";
+              result += "• Recent 30 days average: $567.89\\n";
+              result += "• Overall average: $523.45\\n";
+              result += "• Peak day: 2024-11-15 ($1,234.56)\\n\\n";
+              result += "📊 Growth Insights:\\n";
+              result += "• Consistent upward trend over last quarter\\n";
+              result += "• Seasonal peaks during holiday periods\\n";
+              result += "• 23% improvement in Q4 performance\\n";
+            } else if (analysisType === "outliers") {
+              result += "🚨 Outlier Detection Results:\\n";
+              result += "• Sales Amount: 23 outliers (2.1% of data)\\n";
+              result += "• Customer Age: 8 outliers (0.7% of data)\\n";
+              result += "• Quantity: 12 outliers (1.1% of data)\\n\\n";
+              result += "📋 Outlier Analysis:\\n";
+              result += "• Most outliers in high-value transactions\\n";
+              result += "• Some unusually young/old customers\\n";
+              result += "• Bulk orders creating quantity outliers\\n";
+            }
+
+            result += "\\n✨ Dashboard Features:\\n";
+            result += "• Multi-dataset support (sales, customer, website)\\n";
+            result += "• Automated statistical analysis\\n";
+            result += "• Correlation and relationship detection\\n";
+            result += "• Time series trend analysis\\n";
+            result += "• Advanced outlier detection\\n";
+            result += "• AI-powered insight generation\\n";
+            result += "• Exportable reports (JSON, PDF, Excel)\\n";
+            result += "• Interactive visualizations\\n";
+            result += "• Real-time data processing\\n\\n";
+            result +=
+              "📊 Generated " +
+              Math.floor(Math.random() * 8 + 5) +
+              " actionable insights from your data!";
+            break;
+
+          case "social-media-bot":
+            const platform = inputs.platform || "twitter";
+            const contentType = inputs.content_type || "motivational";
+            const customMessage = inputs.custom_message || "";
+
+            result = "🤖 Social Media Automation Bot Demo\n\n";
+            result +=
+              "📱 Platform: " +
+              platform.charAt(0).toUpperCase() +
+              platform.slice(1) +
+              "\n";
+            result +=
+              "📝 Content Type: " +
+              contentType.charAt(0).toUpperCase() +
+              contentType.slice(1) +
+              "\n\n";
+
+            // Generate sample content based on type
+            let sampleContent = "";
+            if (contentType === "motivational") {
+              sampleContent =
+                "🌟 Success is not final, failure is not fatal: it is the courage to continue that counts. - Start your " +
+                new Date().toLocaleDateString("en-US", { weekday: "long" }) +
+                " with determination! #Motivation";
+            } else if (contentType === "educational") {
+              sampleContent =
+                "💡 Tech Tip: Use virtual environments for Python projects to avoid dependency conflicts! #TechTips #Learning #Python";
+            } else if (contentType === "promotional") {
+              sampleContent =
+                "🚀 Check out our latest automation tool! Save 5 hours per week with smart scheduling! #NewProduct #Automation";
+            } else if (contentType === "engagement") {
+              sampleContent =
+                "❓ Question for you: What's your biggest productivity challenge? Let us know in the comments! #Engagement";
+            }
+
+            if (customMessage) {
+              sampleContent = customMessage;
+            }
+
+            result += "📤 Generated Content:\n";
+            result += '"' + sampleContent + '"\n\n';
+
+            result += "🚀 Publishing Simulation:\n";
+            result += "✅ Content optimized for " + platform + "\n";
+            result +=
+              "✅ Hashtags extracted: " +
+              Math.floor(Math.random() * 3 + 1) +
+              " found\n";
+            result += "✅ Posted successfully to " + platform + "\n";
+            result +=
+              "🔗 Post URL: https://" +
+              platform +
+              ".com/user/post/" +
+              Math.floor(Math.random() * 1000000) +
+              "\n\n";
+
+            result += "📊 Simulated Engagement (first hour):\n";
+            const likes = Math.floor(Math.random() * 50 + 10);
+            const shares = Math.floor(Math.random() * 15 + 2);
+            const comments = Math.floor(Math.random() * 8 + 1);
+
+            result += "👍 Likes: " + likes + "\n";
+            result += "🔄 Shares: " + shares + "\n";
+            result += "💬 Comments: " + comments + "\n";
+            result +=
+              "📈 Engagement Rate: " +
+              (((likes + shares + comments) / 100) * 100).toFixed(1) +
+              "%\n\n";
+
+            result +=
+              "⏰ Optimal Posting Times for " +
+              platform.charAt(0).toUpperCase() +
+              platform.slice(1) +
+              ":\n";
+            if (platform === "twitter") {
+              result += "• Weekdays: 9:00 AM, 12:00 PM, 5:00 PM\n";
+              result += "• Weekends: 10:00 AM, 2:00 PM, 7:00 PM\n";
+              result += "• Best day: Tuesday\n";
+            } else if (platform === "instagram") {
+              result += "• Weekdays: 11:00 AM, 2:00 PM, 8:00 PM\n";
+              result += "• Weekends: 12:00 PM, 4:00 PM, 9:00 PM\n";
+              result += "• Best day: Wednesday\n";
+            } else if (platform === "linkedin") {
+              result += "• Weekdays: 8:00 AM, 12:00 PM, 6:00 PM\n";
+              result += "• Weekends: 10:00 AM, 3:00 PM\n";
+              result += "• Best day: Thursday\n";
+            } else if (platform === "facebook") {
+              result += "• Weekdays: 9:00 AM, 1:00 PM, 7:00 PM\n";
+              result += "• Weekends: 11:00 AM, 3:00 PM, 8:00 PM\n";
+              result += "• Best day: Friday\n";
+            }
+
+            result += "\n✨ Bot Features:\n";
+            result +=
+              "• Multi-platform posting (Twitter, Instagram, LinkedIn, Facebook)\n";
+            result += "• AI-powered content generation with templates\n";
+            result += "• Bulk scheduling with smart intervals\n";
+            result += "• Real-time engagement analytics\n";
+            result += "• Optimal timing recommendations\n";
+            result += "• Content performance analysis\n";
+            result += "• Automated weekly reports\n";
+            result += "• Hashtag and mention tracking\n";
+            result += "• A/B testing capabilities\n\n";
+            result +=
+              "📅 Next scheduled post: " +
+              new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString();
             break;
 
           default:
@@ -1294,6 +1639,24 @@ export default function CodeRunner({ project }) {
                           : "2 (Imperial)"
                         : input.name === "num_sides"
                         ? `${option} sides`
+                        : input.name === "template"
+                        ? option === "welcome"
+                          ? "Welcome Email"
+                          : option === "reminder"
+                          ? "Reminder Email"
+                          : option === "newsletter"
+                          ? "Newsletter"
+                          : option
+                        : input.name === "action"
+                        ? option === "organize"
+                          ? "Organize Files"
+                          : option === "cleanup"
+                          ? "Cleanup Old Files"
+                          : option === "backup"
+                          ? "Create Backup"
+                          : option === "stats"
+                          ? "Generate Statistics"
+                          : option
                         : option}
                     </option>
                   ))}
