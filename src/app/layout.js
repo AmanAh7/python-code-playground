@@ -1,5 +1,5 @@
 import "./globals.css";
-
+import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata = {
   title: "Python Code Playground",
   description: "Interactive Python projects showcase",
