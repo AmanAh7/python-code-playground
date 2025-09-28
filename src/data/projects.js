@@ -5410,4 +5410,602 @@ demo_social_media_bot()`,
       },
     ],
   },
+  {
+    id: "age-calculator",
+    title: "Age Calculator",
+    description:
+      "Calculate exact age in years, months, days, hours, and minutes from birth date",
+    category: "Date & Time Tools",
+    difficulty: "Beginner",
+    tags: ["date", "time", "age", "calculator"],
+    code: `from datetime import datetime
+
+def age_calculator():
+    print("🎂 Age Calculator")
+    print("Calculate your exact age with precision!")
+    print()
+    
+    try:
+        # Get birth date from user
+        print("Enter your birth date:")
+        year = int(input("Year (e.g., 1990): "))
+        month = int(input("Month (1-12): "))
+        day = int(input("Day (1-31): "))
+        
+        # Optional: Get birth time for more precision
+        get_time = input("\\nInclude birth time for precise calculation? (y/n): ").lower()
+        
+        if get_time == 'y':
+            hour = int(input("Hour (0-23): "))
+            minute = int(input("Minute (0-59): "))
+            birth_datetime = datetime(year, month, day, hour, minute)
+        else:
+            birth_datetime = datetime(year, month, day)
+        
+        # Get current date and time
+        current_datetime = datetime.now()
+        
+        # Validate birth date
+        if birth_datetime > current_datetime:
+            print("❌ Birth date cannot be in the future!")
+            return
+        
+        # Calculate age difference
+        age_diff = current_datetime - birth_datetime
+        
+        # Calculate years, months, days
+        years = current_datetime.year - birth_datetime.year
+        months = current_datetime.month - birth_datetime.month
+        days = current_datetime.day - birth_datetime.day
+        
+        # Adjust for negative days
+        if days < 0:
+            months -= 1
+            # Get days in previous month
+            if current_datetime.month == 1:
+                prev_month_days = 31
+            else:
+                prev_month = current_datetime.replace(month=current_datetime.month-1)
+                if prev_month.month == 2:
+                    prev_month_days = 29 if prev_month.year % 4 == 0 else 28
+                elif prev_month.month in [4, 6, 9, 11]:
+                    prev_month_days = 30
+                else:
+                    prev_month_days = 31
+            days += prev_month_days
+        
+        # Adjust for negative months
+        if months < 0:
+            years -= 1
+            months += 12
+        
+        # Calculate total days, hours, minutes
+        total_days = age_diff.days
+        total_hours = total_days * 24 + (age_diff.seconds // 3600)
+        total_minutes = total_hours * 60 + ((age_diff.seconds % 3600) // 60)
+        
+        # Display results
+        print("\\n" + "="*50)
+        print("🎯 YOUR AGE CALCULATION RESULTS")
+        print("="*50)
+        
+        print(f"📅 Birth Date: {birth_datetime.strftime('%B %d, %Y')}")
+        if get_time == 'y':
+            print(f"🕐 Birth Time: {birth_datetime.strftime('%I:%M %p')}")
+        print(f"📅 Current Date: {current_datetime.strftime('%B %d, %Y at %I:%M %p')}")
+        
+        print(f"\\n🎂 Exact Age:")
+        print(f"   {years} years, {months} months, {days} days")
+        
+        print(f"\\n📊 Alternative Representations:")
+        print(f"   • Total days lived: {total_days:,}")
+        print(f"   • Total hours lived: {total_hours:,}")
+        print(f"   • Total minutes lived: {total_minutes:,}")
+        print(f"   • Age in months: {years * 12 + months}")
+        print(f"   • Age in weeks: {total_days // 7}")
+        
+        # Fun facts
+        print(f"\\n🎉 Fun Facts:")
+        print(f"   • You've lived through {years} New Year celebrations!")
+        print(f"   • You've experienced {total_days // 7} weekends!")
+        print(f"   • You've seen {years * 365 + (years // 4)} sunrises (approx.)")
+        
+        # Next birthday countdown
+        next_birthday = birth_datetime.replace(year=current_datetime.year + 1)
+        if birth_datetime.replace(year=current_datetime.year) > current_datetime:
+            next_birthday = birth_datetime.replace(year=current_datetime.year)
+        
+        days_to_birthday = (next_birthday - current_datetime).days
+        print(f"   • Days until next birthday: {days_to_birthday}")
+        
+        # Life stage
+        if years < 13:
+            life_stage = "Child"
+        elif years < 20:
+            life_stage = "Teenager"
+        elif years < 60:
+            life_stage = "Adult"
+        else:
+            life_stage = "Senior"
+        
+        print(f"\\n👤 Life Stage: {life_stage}")
+        
+    except ValueError:
+        print("❌ Please enter valid numbers for date and time!")
+    except Exception as e:
+        print(f"❌ An error occurred: {e}")
+
+# Run the calculator
+age_calculator()`,
+    logic: [
+      "Get user's birth date (year, month, day) and optionally birth time for precise calculation",
+      "Validate that the birth date is not in the future compared to current date",
+      "Calculate the difference between current datetime and birth datetime using Python datetime module",
+      "Handle edge cases for negative days and months by adjusting calculations appropriately",
+      "Convert age difference into multiple formats: years/months/days, total days, hours, minutes",
+      "Provide fun statistics like total weekends lived, days until next birthday, and life stage categorization",
+      "Display comprehensive results with formatted output showing exact age and alternative representations",
+    ],
+    inputs: [
+      { name: "birth_year", type: "number", label: "Birth Year (e.g., 1990)" },
+      { name: "birth_month", type: "number", label: "Birth Month (1-12)" },
+      { name: "birth_day", type: "number", label: "Birth Day (1-31)" },
+      {
+        name: "include_time",
+        type: "select",
+        options: ["no", "yes"],
+        label: "Include birth time?",
+      },
+    ],
+  },
+  {
+    id: "temperature-converter",
+    title: "Temperature Converter",
+    description:
+      "Convert temperatures between Celsius, Fahrenheit, and Kelvin with detailed explanations",
+    category: "Science Tools",
+    difficulty: "Beginner",
+    tags: ["temperature", "conversion", "science"],
+    code: `def temperature_converter():
+    print("🌡️  Advanced Temperature Converter")
+    print("Convert between Celsius, Fahrenheit, and Kelvin")
+    print()
+    
+    # Temperature conversion functions
+    def celsius_to_fahrenheit(celsius):
+        return (celsius * 9/5) + 32
+    
+    def celsius_to_kelvin(celsius):
+        return celsius + 273.15
+    
+    def fahrenheit_to_celsius(fahrenheit):
+        return (fahrenheit - 32) * 5/9
+    
+    def fahrenheit_to_kelvin(fahrenheit):
+        celsius = fahrenheit_to_celsius(fahrenheit)
+        return celsius_to_kelvin(celsius)
+    
+    def kelvin_to_celsius(kelvin):
+        return kelvin - 273.15
+    
+    def kelvin_to_fahrenheit(kelvin):
+        celsius = kelvin_to_celsius(kelvin)
+        return celsius_to_fahrenheit(celsius)
+    
+    # Temperature reference points
+    reference_points = {
+        'absolute_zero': {'c': -273.15, 'f': -459.67, 'k': 0},
+        'water_freezing': {'c': 0, 'f': 32, 'k': 273.15},
+        'water_boiling': {'c': 100, 'f': 212, 'k': 373.15},
+        'human_body': {'c': 37, 'f': 98.6, 'k': 310.15},
+        'room_temp': {'c': 20, 'f': 68, 'k': 293.15}
+    }
+    
+    def get_temperature_context(temp_c):
+        """Provide context about the temperature"""
+        contexts = []
+        
+        if temp_c < -200:
+            contexts.append("🥶 Extremely cold - approaching absolute zero!")
+        elif temp_c < -100:
+            contexts.append("🧊 Extremely cold - colder than Antarctica!")
+        elif temp_c < 0:
+            contexts.append("❄️  Below freezing - water turns to ice")
+        elif temp_c < 10:
+            contexts.append("🧥 Very cold - heavy winter clothing needed")
+        elif temp_c < 18:
+            contexts.append("🧤 Cold - jacket recommended")
+        elif temp_c < 25:
+            contexts.append("😊 Comfortable room temperature")
+        elif temp_c < 30:
+            contexts.append("☀️  Warm - perfect for outdoor activities")
+        elif temp_c < 35:
+            contexts.append("🔥 Hot - stay hydrated!")
+        elif temp_c < 40:
+            contexts.append("🌡️  Very hot - seek shade and AC")
+        else:
+            contexts.append("🚨 Dangerously hot - extreme heat warning!")
+        
+        # Add specific reference comparisons
+        if abs(temp_c - 0) < 1:
+            contexts.append("📍 Near water freezing point (0°C)")
+        elif abs(temp_c - 37) < 1:
+            contexts.append("📍 Near human body temperature (37°C)")
+        elif abs(temp_c - 100) < 1:
+            contexts.append("📍 Near water boiling point (100°C)")
+        
+        return contexts
+    
+    while True:
+        print("\\n🌡️  Temperature Conversion Menu:")
+        print("1. Celsius to Fahrenheit")
+        print("2. Celsius to Kelvin")
+        print("3. Fahrenheit to Celsius")
+        print("4. Fahrenheit to Kelvin")
+        print("5. Kelvin to Celsius")
+        print("6. Kelvin to Fahrenheit")
+        print("7. Convert to all scales")
+        print("8. Show temperature references")
+        print("9. Exit")
+        
+        choice = input("\\nEnter your choice (1-9): ").strip()
+        
+        if choice == '9':
+            print("Thank you for using Temperature Converter! 🌡️")
+            break
+        
+        if choice == '8':
+            print("\\n🌡️  Temperature Reference Points:")
+            print("="*50)
+            for name, temps in reference_points.items():
+                display_name = name.replace('_', ' ').title()
+                print(f"{display_name}:")
+                print(f"  • {temps['c']:.1f}°C = {temps['f']:.1f}°F = {temps['k']:.1f}K")
+            continue
+        
+        try:
+            temp = float(input("\\nEnter temperature value: "))
+            
+            if choice == '1':
+                result = celsius_to_fahrenheit(temp)
+                print(f"\\n🌡️  {temp}°C = {result:.2f}°F")
+                print(f"Formula: °F = (°C × 9/5) + 32")
+                contexts = get_temperature_context(temp)
+                
+            elif choice == '2':
+                result = celsius_to_kelvin(temp)
+                print(f"\\n🌡️  {temp}°C = {result:.2f}K")
+                print(f"Formula: K = °C + 273.15")
+                contexts = get_temperature_context(temp)
+                
+            elif choice == '3':
+                result = fahrenheit_to_celsius(temp)
+                print(f"\\n🌡️  {temp}°F = {result:.2f}°C")
+                print(f"Formula: °C = (°F - 32) × 5/9")
+                contexts = get_temperature_context(result)
+                
+            elif choice == '4':
+                result = fahrenheit_to_kelvin(temp)
+                celsius_temp = fahrenheit_to_celsius(temp)
+                print(f"\\n🌡️  {temp}°F = {result:.2f}K")
+                print(f"Formula: K = ((°F - 32) × 5/9) + 273.15")
+                contexts = get_temperature_context(celsius_temp)
+                
+            elif choice == '5':
+                result = kelvin_to_celsius(temp)
+                print(f"\\n🌡️  {temp}K = {result:.2f}°C")
+                print(f"Formula: °C = K - 273.15")
+                contexts = get_temperature_context(result)
+                
+            elif choice == '6':
+                celsius_temp = kelvin_to_celsius(temp)
+                result = kelvin_to_fahrenheit(temp)
+                print(f"\\n🌡️  {temp}K = {result:.2f}°F")
+                print(f"Formula: °F = ((K - 273.15) × 9/5) + 32")
+                contexts = get_temperature_context(celsius_temp)
+                
+            elif choice == '7':
+                # Convert to all scales
+                if temp >= 0:  # Assume Celsius input for "convert all"
+                    celsius = temp
+                    fahrenheit = celsius_to_fahrenheit(celsius)
+                    kelvin = celsius_to_kelvin(celsius)
+                    
+                    print(f"\\n🌡️  Temperature in all scales:")
+                    print(f"   Celsius:    {celsius:.2f}°C")
+                    print(f"   Fahrenheit: {fahrenheit:.2f}°F") 
+                    print(f"   Kelvin:     {kelvin:.2f}K")
+                    
+                    contexts = get_temperature_context(celsius)
+                else:
+                    print("❌ For 'convert all', please enter a positive value (assumed Celsius)")
+                    continue
+            else:
+                print("❌ Invalid choice! Please select 1-9.")
+                continue
+            
+            # Display temperature context
+            if contexts:
+                print(f"\\n🌡️  Temperature Context:")
+                for context in contexts:
+                    print(f"   {context}")
+                    
+        except ValueError:
+            print("❌ Please enter a valid number!")
+        except Exception as e:
+            print(f"❌ An error occurred: {e}")
+
+# Run the converter
+temperature_converter()`,
+    logic: [
+      "Implement conversion functions between Celsius, Fahrenheit, and Kelvin using standard formulas",
+      "Provide a menu-driven interface allowing users to select specific conversion types or convert to all scales",
+      "Include temperature reference points (freezing point, boiling point, body temperature) for context",
+      "Add contextual information about temperature ranges (cold, comfortable, hot, dangerous)",
+      "Display conversion formulas to help users understand the mathematical relationships",
+      "Handle input validation and provide clear error messages for invalid inputs",
+      "Offer educational value by showing temperature comparisons and real-world references",
+    ],
+    inputs: [
+      {
+        name: "conversion_type",
+        type: "select",
+        options: ["c_to_f", "c_to_k", "f_to_c", "f_to_k", "k_to_c", "k_to_f"],
+        label: "Conversion type",
+      },
+      { name: "temperature", type: "number", label: "Temperature value" },
+    ],
+  },
+  {
+    id: "tip-calculator",
+    title: "Tip Calculator & Bill Splitter",
+    description: "Calculate tips and split bills among friends",
+    category: "Finance Tools",
+    difficulty: "Beginner",
+    tags: ["tip", "bill", "restaurant", "calculator"],
+    code: `def tip_calculator():
+    print("🍽️ Tip Calculator & Bill Splitter")
+    
+    bill_amount = float(input("Enter bill amount ($): "))
+    tip_percentage = float(input("Enter tip percentage (%): "))
+    num_people = int(input("Number of people: "))
+    
+    tip_amount = (bill_amount * tip_percentage) / 100
+    total_amount = bill_amount + tip_amount
+    per_person = total_amount / num_people
+    
+    print("\\nResults:")
+    print("Bill:", bill_amount)
+    print("Tip:", tip_amount)  
+    print("Total:", total_amount)
+    print("Per person:", per_person)
+
+tip_calculator()`,
+    logic: [
+      "Get bill amount, tip percentage, and number of people",
+      "Calculate tip amount using percentage formula",
+      "Add tip to bill for total amount",
+      "Divide total by number of people",
+    ],
+    inputs: [
+      { name: "bill_amount", type: "number", label: "Bill Amount ($)" },
+      { name: "tip_percentage", type: "number", label: "Tip Percentage (%)" },
+      { name: "num_people", type: "number", label: "Number of People" },
+    ],
+  },
+  {
+    id: "qr-code-generator",
+    title: "QR Code Generator",
+    description: "Generate actual QR codes for text, URLs, and more",
+    category: "Utility Tools",
+    difficulty: "Beginner",
+    tags: ["qr", "generator", "utility"],
+    code: `def qr_code_generator():
+    print("📱 QR Code Generator")
+    print("Generate QR codes using online API or library")
+    print()
+    
+    print("QR Code Options:")
+    print("1. Text Message")
+    print("2. Website URL")
+    print("3. Phone Number")
+    print("4. Email Address")
+    
+    choice = input("Choose option (1-4): ").strip()
+    
+    if choice == "1":
+        data = input("Enter your text: ")
+        qr_type = "Text"
+        
+    elif choice == "2":
+        url = input("Enter website URL: ")
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        data = url
+        qr_type = "Website"
+        
+    elif choice == "3":
+        phone = input("Enter phone number: ")
+        data = "tel:" + phone
+        qr_type = "Phone"
+        
+    elif choice == "4":
+        email = input("Enter email address: ")
+        data = "mailto:" + email
+        qr_type = "Email"
+        
+    else:
+        data = input("Enter text: ")
+        qr_type = "Text"
+    
+    # Generate QR code URL using API service
+    import urllib.parse
+    encoded_data = urllib.parse.quote(data)
+    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={encoded_data}"
+    
+    print("\\n✅ QR Code Generated!")
+    print("=" * 40)
+    print(f"Type: {qr_type}")
+    print(f"Data: {data}")
+    print(f"QR Code URL: {qr_url}")
+    print()
+    print("📱 Instructions:")
+    print("1. Copy the QR Code URL above")
+    print("2. Open it in your browser")
+    print("3. Save or scan the QR code!")
+    print()
+    print("💡 Tip: You can also use this in your web projects!")
+
+qr_code_generator()`,
+    logic: [
+      "Get user input for different QR code types",
+      "Format data according to QR code standards",
+      "Generate QR code using free API service",
+      "Provide downloadable QR code URL",
+      "Support multiple data formats",
+    ],
+    inputs: [
+      {
+        name: "qr_type",
+        type: "select",
+        options: ["1", "2", "3", "4"],
+        label: "QR Type",
+      },
+      { name: "qr_data", type: "text", label: "Data to encode" },
+    ],
+  },
+
+  {
+    id: "expense-tracker",
+    title: "Expense Tracker",
+    description: "Track personal expenses and spending",
+    category: "Finance Tools",
+    difficulty: "Beginner",
+    tags: ["expenses", "budget", "finance"],
+    code: `def expense_tracker():
+    print("💰 Expense Tracker")
+    
+    expenses = []
+    
+    while True:
+        print("\\n1. Add Expense")
+        print("2. View Total") 
+        print("3. Exit")
+        
+        choice = input("Select: ").strip()
+        
+        if choice == "1":
+            try:
+                amount = float(input("Amount ($): "))
+                desc = input("Description: ")
+                
+                expenses.append({
+                    "amount": amount,
+                    "description": desc
+                })
+                
+                print("✅ Expense added!")
+                
+            except ValueError:
+                print("❌ Invalid amount!")
+        
+        elif choice == "2":
+            if expenses:
+                total = sum(exp["amount"] for exp in expenses)
+                print("\\n📊 Expenses:")
+                for exp in expenses:
+                    print("$" + str(exp["amount"]) + " - " + exp["description"])
+                print("\\nTotal: $" + str(total))
+            else:
+                print("No expenses recorded")
+        
+        elif choice == "3":
+            break
+        
+        else:
+            print("Invalid choice!")
+
+expense_tracker()`,
+    logic: [
+      "Store expenses in a list",
+      "Add new expenses with amount and description",
+      "Calculate and display total spending",
+      "Simple menu-driven interface",
+    ],
+    inputs: [
+      { name: "expense_amount", type: "number", label: "Amount ($)" },
+      { name: "expense_description", type: "text", label: "Description" },
+    ],
+  },
+
+  {
+    id: "password-manager",
+    title: "Password Manager",
+    description: "Store and manage passwords",
+    category: "Security Tools",
+    difficulty: "Beginner",
+    tags: ["password", "security"],
+    code: `def password_manager():
+    print("🔐 Password Manager")
+    
+    passwords = {}
+    
+    def generate_password():
+        import random
+        import string
+        chars = string.ascii_letters + string.digits + "!@#$"
+        return ''.join(random.choice(chars) for _ in range(12))
+    
+    while True:
+        print("\\n1. Add Password")
+        print("2. View Passwords")
+        print("3. Generate Password")
+        print("4. Exit")
+        
+        choice = input("Select: ").strip()
+        
+        if choice == "1":
+            site = input("Site name: ")
+            username = input("Username: ")
+            password = input("Password: ")
+            
+            passwords[site] = {
+                "username": username,
+                "password": password
+            }
+            
+            print("✅ Password saved!")
+        
+        elif choice == "2":
+            if passwords:
+                print("\\n🔐 Stored Passwords:")
+                for site, data in passwords.items():
+                    print("\\n" + site + ":")
+                    print("  Username: " + data["username"])
+                    print("  Password: (" + data["password"] + ")")
+            else:
+                print("No passwords stored")
+        
+        elif choice == "3":
+            new_pass = generate_password()
+            print("\\n🎲 Generated: " + new_pass)
+        
+        elif choice == "4":
+            break
+        
+        else:
+            print("Invalid choice!")
+
+password_manager()`,
+    logic: [
+      "Store passwords in dictionary",
+      "Add new password entries",
+      "View stored passwords (hidden)",
+      "Generate random secure passwords",
+    ],
+    inputs: [
+      { name: "site_name", type: "text", label: "Site Name" },
+      { name: "username", type: "text", label: "Username" },
+    ],
+  },
 ];

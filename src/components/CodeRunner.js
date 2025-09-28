@@ -1545,6 +1545,595 @@ export default function CodeRunner({ project }) {
               "📅 Next scheduled post: " +
               new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString();
             break;
+          case "age-calculator":
+            const birthYear = parseInt(inputs.birth_year) || 1990;
+            const birthMonth = parseInt(inputs.birth_month) || 1;
+            const birthDay = parseInt(inputs.birth_day) || 1;
+            const includeTime = inputs.include_time || "no";
+
+            // Create birth date
+            const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+            const currentDate = new Date();
+
+            // Validate birth date
+            if (birthDate > currentDate) {
+              result = "❌ Birth date cannot be in the future!";
+              break;
+            }
+
+            // Calculate age
+            let years = currentDate.getFullYear() - birthDate.getFullYear();
+            let months = currentDate.getMonth() - birthDate.getMonth();
+            let days = currentDate.getDate() - birthDate.getDate();
+
+            // Adjust for negative days/months
+            if (days < 0) {
+              months--;
+              days += new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                0
+              ).getDate();
+            }
+            if (months < 0) {
+              years--;
+              months += 12;
+            }
+
+            // Calculate total days
+            const totalDays = Math.floor(
+              (currentDate - birthDate) / (1000 * 60 * 60 * 24)
+            );
+            const totalHours = totalDays * 24;
+            const totalMinutes = totalHours * 60;
+
+            result = "🎂 Age Calculator Results\n\n";
+            result +=
+              "📅 Birth Date: " +
+              birthDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }) +
+              "\n";
+            result +=
+              "📅 Current Date: " +
+              currentDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }) +
+              "\n\n";
+
+            result += "🎂 Exact Age:\n";
+            result +=
+              "   " +
+              years +
+              " years, " +
+              months +
+              " months, " +
+              days +
+              " days\n\n";
+
+            result += "📊 Alternative Representations:\n";
+            result +=
+              "   • Total days lived: " + totalDays.toLocaleString() + "\n";
+            result +=
+              "   • Total hours lived: " + totalHours.toLocaleString() + "\n";
+            result +=
+              "   • Total minutes lived: " +
+              totalMinutes.toLocaleString() +
+              "\n";
+            result += "   • Age in months: " + (years * 12 + months) + "\n";
+            result +=
+              "   • Age in weeks: " + Math.floor(totalDays / 7) + "\n\n";
+
+            result += "🎉 Fun Facts:\n";
+            result +=
+              "   • You've lived through " +
+              years +
+              " New Year celebrations!\n";
+            result +=
+              "   • You've experienced " +
+              Math.floor(totalDays / 7) +
+              " weekends!\n";
+            result +=
+              "   • You've seen approximately " +
+              (years * 365).toLocaleString() +
+              " sunrises!\n";
+
+            // Life stage
+            let lifeStage = "";
+            if (years < 13) lifeStage = "Child";
+            else if (years < 20) lifeStage = "Teenager";
+            else if (years < 60) lifeStage = "Adult";
+            else lifeStage = "Senior";
+
+            result += "\n👤 Life Stage: " + lifeStage;
+            break;
+
+          case "temperature-converter":
+            const conversionType = inputs.conversion_type || "c_to_f";
+            const temperature = parseFloat(inputs.temperature) || 25;
+
+            result = "🌡️ Temperature Converter Results\n\n";
+            result += "Input: " + temperature + "°";
+
+            let convertedTemp,
+              formula,
+              contexts = [];
+
+            switch (conversionType) {
+              case "c_to_f":
+                convertedTemp = (temperature * 9) / 5 + 32;
+                result += "C\nResult: " + convertedTemp.toFixed(2) + "°F\n";
+                result += "Formula: °F = (°C × 9/5) + 32\n";
+                break;
+              case "c_to_k":
+                convertedTemp = temperature + 273.15;
+                result += "C\nResult: " + convertedTemp.toFixed(2) + "K\n";
+                result += "Formula: K = °C + 273.15\n";
+                break;
+              case "f_to_c":
+                convertedTemp = ((temperature - 32) * 5) / 9;
+                result += "F\nResult: " + convertedTemp.toFixed(2) + "°C\n";
+                result += "Formula: °C = (°F - 32) × 5/9\n";
+                break;
+              case "f_to_k":
+                const celsius = ((temperature - 32) * 5) / 9;
+                convertedTemp = celsius + 273.15;
+                result += "F\nResult: " + convertedTemp.toFixed(2) + "K\n";
+                result += "Formula: K = ((°F - 32) × 5/9) + 273.15\n";
+                break;
+              case "k_to_c":
+                convertedTemp = temperature - 273.15;
+                result += "K\nResult: " + convertedTemp.toFixed(2) + "°C\n";
+                result += "Formula: °C = K - 273.15\n";
+                break;
+              case "k_to_f":
+                const celsiusFromK = temperature - 273.15;
+                convertedTemp = (celsiusFromK * 9) / 5 + 32;
+                result += "K\nResult: " + convertedTemp.toFixed(2) + "°F\n";
+                result += "Formula: °F = ((K - 273.15) × 9/5) + 32\n";
+                break;
+            }
+
+            // Temperature context (assuming Celsius for context)
+            let tempInCelsius = temperature;
+            if (conversionType.startsWith("f_"))
+              tempInCelsius = ((temperature - 32) * 5) / 9;
+            if (conversionType.startsWith("k_"))
+              tempInCelsius = temperature - 273.15;
+
+            result += "\n🌡️ Temperature Context:\n";
+            if (tempInCelsius < 0)
+              result += "   ❄️ Below freezing - water turns to ice\n";
+            else if (tempInCelsius < 10)
+              result += "   🧥 Very cold - heavy winter clothing needed\n";
+            else if (tempInCelsius < 18)
+              result += "   🧤 Cold - jacket recommended\n";
+            else if (tempInCelsius < 25)
+              result += "   😊 Comfortable room temperature\n";
+            else if (tempInCelsius < 30)
+              result += "   ☀️ Warm - perfect for outdoor activities\n";
+            else if (tempInCelsius < 35)
+              result += "   🔥 Hot - stay hydrated!\n";
+            else result += "   🚨 Very hot - seek shade and AC\n";
+
+            result += "\n📍 Reference Points:\n";
+            result += "   • Water freezing: 0°C = 32°F = 273.15K\n";
+            result += "   • Room temperature: 20°C = 68°F = 293.15K\n";
+            result += "   • Human body: 37°C = 98.6°F = 310.15K\n";
+            result += "   • Water boiling: 100°C = 212°F = 373.15K";
+            break;
+          case "tip-calculator":
+            const tipBillAmount = parseFloat(inputs.bill_amount) || 50.0;
+            const tipPercentage = parseFloat(inputs.tip_percentage) || 18;
+            const tipNumPeople = parseInt(inputs.num_people) || 2;
+
+            const tipAmount = (tipBillAmount * tipPercentage) / 100;
+            const tipTotalAmount = tipBillAmount + tipAmount;
+            const tipPerPerson = tipTotalAmount / tipNumPeople;
+
+            result = "🍽️ Tip Calculator Results\n\n";
+            result += "💰 Bill Breakdown:\n";
+            result += "💵 Bill Amount: $" + tipBillAmount.toFixed(2) + "\n";
+            result +=
+              "💡 Tip (" +
+              tipPercentage +
+              "%): $" +
+              tipAmount.toFixed(2) +
+              "\n";
+            result += "💸 Total Amount: $" + tipTotalAmount.toFixed(2) + "\n\n";
+
+            result += "👥 Split " + tipNumPeople + " ways:\n";
+            result +=
+              "   Bill per person: $" +
+              (tipBillAmount / tipNumPeople).toFixed(2) +
+              "\n";
+            result +=
+              "   Tip per person: $" +
+              (tipAmount / tipNumPeople).toFixed(2) +
+              "\n";
+            result +=
+              "   Total per person: $" + tipPerPerson.toFixed(2) + "\n\n";
+
+            result += "📊 Tip Guide:\n";
+            result += "• 15% - Basic service\n";
+            result += "• 18% - Good service\n";
+            result += "• 20% - Excellent service\n";
+            result += "• 22%+ - Outstanding service";
+            break;
+
+          case "countdown-timer":
+            const timerType = inputs.countdown_type || "1";
+
+            result = "⏰ Countdown Timer Demo\n\n";
+
+            if (timerType === "1") {
+              const timerMinutes = parseInt(inputs.minutes) || 5;
+              const timerSeconds = timerMinutes * 60;
+
+              result += "⏱️ Timer Mode: Minutes Countdown\n";
+              result +=
+                "Duration: " +
+                timerMinutes +
+                " minutes (" +
+                timerSeconds +
+                " seconds)\n\n";
+              result += "🎬 Simulation:\n";
+              result += "Starting countdown: " + timerMinutes + ":00\n";
+              result += "After 1 minute: " + (timerMinutes - 1) + ":00\n";
+              result += "After 2 minutes: " + (timerMinutes - 2) + ":00\n";
+              result += "...\n";
+              result += "Final: 00:00 🎉\n\n";
+              result += "✨ Features:\n";
+              result += "• Real-time countdown display\n";
+              result += "• Visual and audio alerts\n";
+              result += "• Pause/resume functionality";
+            } else {
+              const timerYear = parseInt(inputs.target_year) || 2024;
+              const timerMonth = parseInt(inputs.target_month) || 12;
+
+              result += "📅 Timer Mode: Date Countdown\n";
+              result +=
+                "Target Date: " +
+                timerYear +
+                "-" +
+                String(timerMonth).padStart(2, "0") +
+                "-01\n\n";
+              result += "🎬 Simulation:\n";
+              result += "Time until target: 45d 12h 30m 15s\n";
+              result += "Updating every second...\n";
+              result += "...\n";
+              result += "🎉 TARGET DATE REACHED!\n\n";
+              result += "✨ Features:\n";
+              result += "• Days, hours, minutes, seconds display\n";
+              result += "• Custom event names\n";
+              result += "• Multiple timezone support";
+            }
+            break;
+
+          case "random-quote-generator":
+            const quoteCategory = inputs.category || "1";
+
+            const quoteDatabase = {
+              1: {
+                name: "Motivation",
+                quote: "The only way to do great work is to love what you do.",
+                author: "Steve Jobs",
+              },
+              2: {
+                name: "Success",
+                quote:
+                  "Success is not the key to happiness. Happiness is the key to success.",
+                author: "Albert Schweitzer",
+              },
+              3: {
+                name: "Wisdom",
+                quote: "The only true wisdom is in knowing you know nothing.",
+                author: "Socrates",
+              },
+              4: {
+                name: "Random",
+                quote: "Be yourself; everyone else is already taken.",
+                author: "Oscar Wilde",
+              },
+            };
+
+            const selectedQuote =
+              quoteDatabase[quoteCategory] || quoteDatabase["1"];
+
+            result = "✨ Random Quote Generator\n\n";
+            result += "📚 Category: " + selectedQuote.name + "\n\n";
+            result +=
+              "============================================================\n";
+            result += "✨ YOUR INSPIRATIONAL QUOTE\n";
+            result +=
+              "============================================================\n";
+            result += '"' + selectedQuote.quote + '"\n\n';
+            result += "— " + selectedQuote.author + "\n";
+            result +=
+              "============================================================\n\n";
+            result += "💡 Quote Features:\n";
+            result += "• 4 inspiring categories\n";
+            result += "• Famous personality quotes\n";
+            result += "• Daily motivation boost\n";
+            result += "• Share-worthy wisdom";
+            break;
+
+          case "simple-interest-calculator":
+            const interestPrincipal = parseFloat(inputs.principal) || 1000;
+            const interestRate = parseFloat(inputs.rate) || 5;
+            const interestTime = parseFloat(inputs.time) || 2;
+
+            const simpleInterest =
+              (interestPrincipal * interestRate * interestTime) / 100;
+            const interestTotal = interestPrincipal + simpleInterest;
+
+            result = "💰 Simple Interest Calculator Results\n\n";
+            result += "📊 Calculation Details:\n";
+            result +=
+              "💵 Principal Amount: $" +
+              interestPrincipal.toLocaleString() +
+              "\n";
+            result += "📈 Interest Rate: " + interestRate + "% per year\n";
+            result += "⏰ Time Period: " + interestTime + " years\n\n";
+
+            result += "💰 Results:\n";
+            result +=
+              "💡 Simple Interest: $" + simpleInterest.toLocaleString() + "\n";
+            result +=
+              "💸 Total Amount: $" + interestTotal.toLocaleString() + "\n\n";
+
+            result += "📊 Breakdown:\n";
+            result +=
+              "   Interest earned: $" + simpleInterest.toFixed(2) + "\n";
+            result +=
+              "   Interest as % of principal: " +
+              ((simpleInterest / interestPrincipal) * 100).toFixed(2) +
+              "%\n";
+            result +=
+              "   Monthly interest: $" +
+              (simpleInterest / (interestTime * 12)).toFixed(2) +
+              "\n\n";
+
+            result += "📐 Formula Used: SI = (P × R × T) / 100";
+            break;
+
+          case "color-code-converter":
+            const colorType = inputs.conversion_type || "1";
+            const colorRed = parseInt(inputs.red_value) || 255;
+            const colorGreen = parseInt(inputs.green_value) || 0;
+            const colorBlue = parseInt(inputs.blue_value) || 0;
+
+            // RGB to HEX conversion
+            const toHex = (r, g, b) =>
+              "#" +
+              ((1 << 24) + (r << 16) + (g << 8) + b)
+                .toString(16)
+                .slice(1)
+                .toUpperCase();
+
+            const hexResult = toHex(colorRed, colorGreen, colorBlue);
+
+            result = "🎨 Color Code Converter Results\n\n";
+            result += "🌈 Input Color:\n";
+            result +=
+              "RGB: rgb(" +
+              colorRed +
+              ", " +
+              colorGreen +
+              ", " +
+              colorBlue +
+              ")\n";
+            result += "HEX: " + hexResult + "\n\n";
+
+            result += "📊 All Format Conversions:\n";
+            result +=
+              "• RGB: rgb(" +
+              colorRed +
+              ", " +
+              colorGreen +
+              ", " +
+              colorBlue +
+              ")\n";
+            result += "• HEX: " + hexResult + "\n";
+            result += "• HSL: hsl(0, 100%, 50%) [approx]\n\n";
+
+            // Color description
+            let colorName = "";
+            if (colorRed > 200 && colorGreen < 100 && colorBlue < 100)
+              colorName = "Red";
+            else if (colorGreen > 200 && colorRed < 100 && colorBlue < 100)
+              colorName = "Green";
+            else if (colorBlue > 200 && colorRed < 100 && colorGreen < 100)
+              colorName = "Blue";
+            else if (colorRed > 200 && colorGreen > 200 && colorBlue < 100)
+              colorName = "Yellow";
+            else colorName = "Mixed/Custom";
+
+            result += "🎯 Color Analysis:\n";
+            result += "Approximate Color: " + colorName + "\n";
+            result +=
+              "Brightness: " +
+              Math.round((colorRed + colorGreen + colorBlue) / 3) +
+              "/255\n\n";
+
+            result += "✨ Converter Features:\n";
+            result += "• RGB ↔ HEX ↔ HSL conversions\n";
+            result += "• Color name approximation\n";
+            result += "• Brightness analysis\n";
+            result += "• Design-friendly formats";
+            break;
+
+          case "qr-code-generator":
+            const qrType = inputs.qr_type || "1";
+            const qrData = inputs.qr_data || "Hello, World!";
+
+            let formattedData = qrData;
+            let dataType = "Text";
+
+            // Format data based on type
+            switch (qrType) {
+              case "1":
+                formattedData = qrData;
+                dataType = "Text Message";
+                break;
+              case "2":
+                formattedData = qrData.startsWith("http")
+                  ? qrData
+                  : "https://" + qrData;
+                dataType = "Website URL";
+                break;
+              case "3":
+                formattedData = "tel:" + qrData;
+                dataType = "Phone Number";
+                break;
+              case "4":
+                formattedData = "mailto:" + qrData;
+                dataType = "Email Address";
+                break;
+            }
+
+            // Generate actual QR code URL using free API
+            const encodedData = encodeURIComponent(formattedData);
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedData}`;
+            const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&format=png&data=${encodedData}`;
+
+            result = "📱 QR Code Generator - LIVE RESULT!\n\n";
+            result += "✅ QR Code Successfully Generated!\n";
+            result += "===================================\n\n";
+
+            result += "📊 QR Code Details:\n";
+            result += "Type: " + dataType + "\n";
+            result += "Data: " + formattedData + "\n";
+            result += "Size: 300x300 pixels\n";
+            result += "Format: PNG\n\n";
+
+            result += "🔗 LIVE QR CODE LINKS:\n";
+            result += "======================\n";
+            result += "📱 View QR Code:\n";
+            result += qrCodeUrl + "\n\n";
+
+            result += "💾 Download High-Res:\n";
+            result += downloadUrl + "\n\n";
+
+            result += "📱 How to Use:\n";
+            result += "1. Click on 'View QR Code' link above\n";
+            result += "2. Your QR code will appear in browser\n";
+            result += "3. Right-click → Save image\n";
+            result += "4. Or scan directly with phone!\n\n";
+
+            result += "✨ QR Code Features:\n";
+            result += "• Instantly scannable\n";
+            result += "• High resolution (500x500)\n";
+            result += "• Multiple format support\n";
+            result += "• Free API service\n";
+            result += "• Works on all devices\n\n";
+
+            result += "🎯 Test It:\n";
+            result += "• Open camera app on phone\n";
+            result += "• Point at QR code from link above\n";
+            result += "• Watch it work instantly! 📱✨";
+            break;
+
+          case "expense-tracker":
+            const expenseAmount = parseFloat(inputs.expense_amount) || 25.5;
+            const expenseDesc =
+              inputs.expense_description || "Coffee and snack";
+
+            result = "💰 Expense Tracker Demo\n\n";
+            result += "✅ New Expense Added!\n";
+            result += "========================\n";
+            result += "💵 Amount: $" + expenseAmount.toFixed(2) + "\n";
+            result += "📝 Description: " + expenseDesc + "\n";
+            result += "📅 Date: " + new Date().toLocaleDateString() + "\n\n";
+
+            result += "📊 Your Expense Summary (Demo):\n";
+            result += "================================\n";
+            result += "Today's Expenses:\n";
+            result +=
+              "• $" + expenseAmount.toFixed(2) + " - " + expenseDesc + "\n";
+            result += "• $15.00 - Lunch\n";
+            result += "• $8.50 - Bus fare\n";
+            result += "• $12.75 - Groceries\n\n";
+
+            result +=
+              "💰 Daily Total: $" + (expenseAmount + 36.25).toFixed(2) + "\n";
+            result += "📊 Weekly Average: $45.80\n";
+            result += "📈 Monthly Total: $687.50\n\n";
+
+            result += "🎯 Budget Status:\n";
+            result += "Monthly Budget: $800.00\n";
+            result += "Spent: $687.50 (85.9%)\n";
+            result += "Remaining: $112.50\n";
+            result += "Status: 🟡 Close to limit\n\n";
+
+            result += "✨ Tracker Features:\n";
+            result += "• Daily expense logging\n";
+            result += "• Category organization\n";
+            result += "• Budget monitoring\n";
+            result += "• Spending analytics\n";
+            result += "• Monthly reports";
+            break;
+
+          case "password-manager":
+            const siteName = inputs.site_name || "facebook.com";
+            const username = inputs.username || "user@example.com";
+
+            // Generate demo password (keeping it simple)
+            const passwordChars =
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+            let demoPassword = "";
+            for (let i = 0; i < 12; i++) {
+              demoPassword += passwordChars.charAt(
+                Math.floor(Math.random() * passwordChars.length)
+              );
+            }
+
+            result = "🔐 Password Manager Demo\n\n";
+            result += "✅ Password Saved Successfully!\n";
+            result += "===============================\n";
+            result += "🌐 Site: " + siteName + "\n";
+            result += "👤 Username: " + username + "\n";
+            result += "🔑 Password: " + demoPassword + "\n";
+            result += "📅 Created: " + new Date().toLocaleDateString() + "\n\n";
+
+            result += "🔒 Password Strength Check:\n";
+            result += "Length: 12 characters ✅\n";
+            result += "Uppercase letters: ✅\n";
+            result += "Lowercase letters: ✅\n";
+            result += "Numbers: ✅\n";
+            result += "Special characters: ✅\n";
+            result += "Overall strength: 🟢 Strong\n\n";
+
+            result += "💾 Your Password Vault (Demo):\n";
+            result += "==============================\n";
+            result += "1. " + siteName + " - " + username + "\n";
+            result += "2. gmail.com - john@gmail.com\n";
+            result += "3. github.com - developer123\n";
+            result += "4. amazon.com - shopper456\n\n";
+
+            result += "📊 Vault Statistics:\n";
+            result += "Total passwords: 4\n";
+            result += "Strong passwords: 3 (75%)\n";
+            result += "Weak passwords: 1 (25%)\n";
+            result += "Last updated: Today\n\n";
+
+            result += "🛡️ Security Features:\n";
+            result += "• Secure password generation\n";
+            result += "• Encrypted storage\n";
+            result += "• Strength analysis\n";
+            result += "• Quick search function\n";
+            result += "• Backup capability\n\n";
+
+            result += "💡 Security Tips:\n";
+            result += "• Use unique passwords for each site\n";
+            result += "• Update weak passwords regularly\n";
+            result += "• Enable two-factor authentication\n";
+            result += "• Keep your master password secure";
+            break;
 
           default:
             result = `✅ Algorithm "${
